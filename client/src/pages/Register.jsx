@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import bgImage from "../assets/bg.png";
+import ApiClient from "../api";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
+
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const api = new ApiClient();
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -13,187 +15,148 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+
     e.preventDefault();
+
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match");
       return;
     }
-    login({ fullName: form.fullName, email: form.email, phone: form.phone });
-    navigate("/");
-  };
 
-  const inputClass =
-    "w-full px-5 py-4 pr-12 rounded-full text-white placeholder-purple-200 text-sm outline-none transition-all";
+    try {
 
-  const inputStyle = {
-    background: "rgba(255, 255, 255, 0.12)",
-    border: "1px solid rgba(255, 255, 255, 0.2)",
+      const res = await api.register(
+        form.fullName,
+        form.email,
+        form.phone,
+        form.password
+      );
+
+      if (res) {
+        toast.success(res.message || "Registration successful!");
+        navigate("/login");
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast.error(
+        error?.response?.data?.message || "Registration failed"
+      );
+
+    }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-10"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Glassmorphism card */}
-      <div
-        className="w-full max-w-md rounded-3xl px-10 py-12"
-        style={{
-          background: "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
-          border: "1px solid rgba(255, 255, 255, 0.18)",
-          boxShadow: "0 8px 48px rgba(0, 0, 0, 0.35)",
-        }}
-      >
-        <h1 className="text-4xl font-bold text-white text-center mb-8 tracking-wide">
-          Join Us!
-        </h1>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-          {/* Full Name */}
-          <div className="relative">
-            <input
-              type="text"
-              name="fullName"
-              value={form.fullName}
-              onChange={handleChange}
-              placeholder="Full Name"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-200 text-lg">👤</span>
-          </div>
-
-          {/* Email */}
-          <div className="relative">
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="Email"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-200 text-lg">✉️</span>
-          </div>
-
-          {/* Phone */}
-          <div className="relative">
-            <input
-              type="tel"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="Phone Number"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <span className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-200 text-lg">📞</span>
-          </div>
-
-          {/* Password */}
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-200 text-lg"
-            >
-              {showPassword ? "🙈" : "🔒"}
-            </button>
-          </div>
-
-          {/* Confirm Password */}
-          <div className="relative">
-            <input
-              type={showConfirm ? "text" : "password"}
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm Password"
-              required
-              className={inputClass}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-200 text-lg"
-            >
-              {showConfirm ? "🙈" : "🔒"}
-            </button>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <p
-              className="text-sm text-center px-4 py-2 rounded-full"
-              style={{
-                background: "rgba(239, 68, 68, 0.2)",
-                border: "1px solid rgba(239, 68, 68, 0.4)",
-                color: "#fca5a5",
-              }}
-            >
-              ⚠️ {error}
-            </p>
-          )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full py-4 rounded-full font-bold text-purple-900 text-base transition-all hover:opacity-90 active:scale-95 mt-1"
-            style={{ background: "linear-gradient(90deg, #ffffff, #e9d5ff)" }}
-          >
-            Create Account
-          </button>
-
-        </form>
-
-        <p className="text-center text-purple-100 text-sm mt-7">
-          Already have an account?{" "}
-          <Link to="/login" className="font-bold text-white hover:text-purple-200 transition-colors">
-            Sign In
-          </Link>
-        </p>
-
-        <p className="text-center mt-4">
-          <span
-            className="text-xs text-purple-300 cursor-pointer hover:text-white transition-colors"
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center mb-8">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-4 cursor-pointer"
+            style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
             onClick={() => navigate("/")}
           >
-            ← Back to Eventify
-          </span>
-        </p>
+            📅
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
+          <p className="text-sm text-gray-500 mt-1">Join Eventify and start exploring events</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Full Name */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
+                placeholder="Tarique Rahman"
+                required
+                className="w-full pl-3 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">Email address</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                required
+                className="w-full pl-3 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">Phone Number</label>
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+8801*********"
+                required
+                className="w-full pl-3 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">Password</label>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full pl-3 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-700">Confirm Password</label>
+              <input
+                type={showConfirm ? "text" : "password"}
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full pl-3 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+              />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)}>
+                {showConfirm ? "🙈" : "👁️"}
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-95 mt-1"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+            >
+              Create Account
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
