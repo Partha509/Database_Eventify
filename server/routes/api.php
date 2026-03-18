@@ -23,7 +23,7 @@ use App\Http\Controllers\API\VenueController;
 // We point this to UserController@store to use our fixed registration logic
 Route::post('/register', [UserController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:api')->post('/logout', [AuthController::class, 'logout']);
 
 // --- Users ---
 Route::get('/users', [UserController::class, 'index']);
