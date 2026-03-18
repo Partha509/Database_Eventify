@@ -35,7 +35,6 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'password_hash' => 'required|string|min:6',
-            'role_id' => 'sometimes|integer', 
         ]);
 
         $user = User::create([
@@ -43,7 +42,7 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password_hash' => Hash::make($request->password_hash),
-            'role_id' => $request->role_id ?? 1, 
+            'role_id' => 1,
         ]);
 
         return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
