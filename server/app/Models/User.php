@@ -13,6 +13,9 @@ class User extends Authenticatable implements JWTSubject
 
     protected $primaryKey = 'user_id';
 
+    // Laravel will now find the columns we just added in phpMyAdmin
+    public $timestamps = true;
+
     protected $fillable = [
         'user_name',
         'email',

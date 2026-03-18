@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -7,6 +8,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class AuthController extends Controller
 {
@@ -17,19 +21,21 @@ class AuthController extends Controller
             'user_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:6',
+            // Accept either 'password' or 'password_hash' to prevent frontend errors
+            'password' => 'required_without:password_hash|string|min:6',
+            'password_hash' => 'required_without:password|string|min:6',
         ]);
 
          if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-
         $user = User::create([
             'user_name' => $request->user_name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'password_hash' => Hash::make($request->password),
+            // Uses whichever password field the frontend sent
+            'password_hash' => Hash::make($request->password ?? $request->password_hash),
             'role_id' => 1
         ]);
 
@@ -44,12 +50,13 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $user = User::where('email',$credentials['email'])->first();
+        $user = User::where('email', $credentials['email'])->first();
 
-        if (!$user || !Hash::check($credentials['password'],$user->password_hash)) {
+        // Check if user exists and password matches our password_hash column
+        if (!$user || !Hash::check($credentials['password'], $user->password_hash)) {
             return response()->json([
                 'message' => 'Invalid email or password'
-            ],401);
+            ], 401);
         }
 
         $token = JWTAuth::fromUser($user);
@@ -58,6 +65,38 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'token' => $token,
             'user' => $user
+        ]);
+    }
+
+    // LOGOUT
+    public function logout()
+    {
+        try {
+            $token = JWTAuth::getToken();
+
+            if (!$token) {
+                return response()->json([
+                    'message' => 'Token not provided',
+                ], 400);
+            }
+
+            JWTAuth::invalidate($token);
+        } catch (TokenExpiredException $e) {
+            return response()->json([
+                'message' => 'Token has expired',
+            ], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json([
+                'message' => 'Token is invalid',
+            ], 401);
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Could not invalidate token',
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => 'Successfully logged out'
         ]);
     }
 
