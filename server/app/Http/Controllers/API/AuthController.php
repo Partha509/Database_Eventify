@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 
 class AuthController extends Controller
 {
@@ -68,7 +71,29 @@ class AuthController extends Controller
     // LOGOUT
     public function logout()
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        try {
+            $token = JWTAuth::getToken();
+
+            if (!$token) {
+                return response()->json([
+                    'message' => 'Token not provided',
+                ], 400);
+            }
+
+            JWTAuth::invalidate($token);
+        } catch (TokenExpiredException $e) {
+            return response()->json([
+                'message' => 'Token has expired',
+            ], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json([
+                'message' => 'Token is invalid',
+            ], 401);
+        } catch (JWTException $e) {
+            return response()->json([
+                'message' => 'Could not invalidate token',
+            ], 400);
+        }
 
         return response()->json([
             'message' => 'Successfully logged out'
