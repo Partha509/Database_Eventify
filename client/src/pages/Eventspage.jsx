@@ -14,6 +14,9 @@ import {
   SkeletonCarousel, SkeletonEventGrid, usePageLoad,
 } from "../components/ui";
 
+import ApiClient from "../api";
+
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -1194,6 +1197,44 @@ function EventGrid({ darkMode, navigate, filteredEvents, isSearchActive }) {
 // ─── AI Chat Widget ───────────────────────────────────────────────────────────
 
 function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
+  // basic states for the chat functionality
+  const [messages, setMessages] = useState([
+    { role: "bot", text: "Hi! I'm the Eventify Assistant. Discover concerts, tech summits, or get help with your ticket booking instantly. How can I help you today?" }
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // auto-scroll to the bottom whenever a new message pops up
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isChatOpen]);
+
+  // fires when user clicks send or hits enter
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    
+    const userMsg = input;
+    setInput(""); // clear input box immediately
+    setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
+    setIsLoading(true);
+
+    try {
+      const api = new ApiClient();
+      const response = await api.chatWithAI(userMsg);
+      
+      if (response && response.reply) {
+        setMessages((prev) => [...prev, { role: "bot", text: response.reply }]);
+      }
+    } catch (err) {
+      setMessages((prev) => [...prev, { role: "bot", text: "Oops, having trouble connecting to the server right now." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="fixed bottom-24 sm:bottom-12 left-4 sm:left-12 z-[90] flex flex-col items-start">
       {isChatOpen && (
@@ -1207,7 +1248,8 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
             ${darkMode ? "bg-[#120626]/95 border-white/10" : "bg-white/95 border-slate-200"}
           `}
         >
-          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-6 sm:p-10 flex items-center justify-between shadow-xl">
+          {/* header area */}
+          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-6 sm:p-10 flex items-center justify-between shadow-xl shrink-0">
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="relative">
                 <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 rounded-2xl backdrop-blur-xl flex items-center justify-center border border-white/30 shadow-inner">
@@ -1221,9 +1263,6 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
               </div>
             </div>
             <div className="flex gap-3 sm:gap-4">
-              <button className="p-2.5 sm:p-3 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-all">
-                <Settings size={16} />
-              </button>
               <button
                 onClick={() => setIsChatOpen(false)}
                 className="p-2.5 sm:p-3 bg-white/10 rounded-xl text-white hover:bg-rose-500 transition-all"
@@ -1233,39 +1272,37 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
             </div>
           </div>
 
-          <div className="flex-1 p-6 sm:p-10 overflow-y-auto no-scrollbar flex flex-col items-center justify-center text-center space-y-5 sm:space-y-8">
-            <div className="relative group">
-              <div className="absolute -inset-4 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-all" />
-              <div className="w-24 h-24 sm:w-36 sm:h-36 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[2.5rem] sm:rounded-[3rem] flex items-center justify-center shadow-2xl shadow-indigo-500/40 relative z-10">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 border-2 border-white/20 rounded-full animate-[spin_8s_linear_infinite] flex items-center justify-center">
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full shadow-[0_0_20px_white]" />
-                </div>
+          {/* dynamic chat messages area */}
+          <div className="flex-1 p-6 overflow-y-auto no-scrollbar flex flex-col space-y-4">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`max-w-[80%] p-4 rounded-2xl text-sm font-bold ${
+                  msg.role === "user"
+                    ? "bg-indigo-600 text-white self-end rounded-br-sm"
+                    : darkMode
+                    ? "bg-white/10 text-slate-200 self-start rounded-bl-sm"
+                    : "bg-slate-100 text-slate-800 self-start rounded-bl-sm"
+                }`}
+              >
+                {msg.text}
               </div>
-            </div>
-            <div>
-              <h3 className={`text-2xl sm:text-3xl font-black mb-2 sm:mb-3 ${darkMode ? "text-white" : "text-slate-900"}`}>
-                How can I help?
-              </h3>
-              <p className="text-slate-500 font-bold max-w-[240px] leading-relaxed mx-auto text-sm">
-                Discover concerts, tech summits, or get help with your ticket booking instantly.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
-              {["Find Music", "My Tickets"].map((btn) => (
-                <button
-                  key={btn}
-                  className={`
-                    py-3 sm:py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest border transition-all
-                    ${darkMode ? "bg-white/5 border-white/5 hover:bg-white/10" : "bg-slate-50 border-slate-100 hover:bg-slate-100"}
-                  `}
-                >
-                  {btn}
-                </button>
-              ))}
-            </div>
+            ))}
+            
+            {/* show a little typing indicator when waiting for gemini */}
+            {isLoading && (
+              <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-bold self-start rounded-bl-sm flex gap-1 items-center h-12 ${darkMode ? "bg-white/10" : "bg-slate-100"}`}>
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-100" />
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce delay-200" />
+              </div>
+            )}
+            {/* invisible div to attach our auto-scroll ref to */}
+            <div ref={messagesEndRef} />
           </div>
 
-          <div className={`p-5 sm:p-8 border-t ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
+          {/* input box area */}
+          <div className={`p-5 sm:p-8 border-t shrink-0 ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
             <div
               className={`
                 flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border transition-all
@@ -1275,13 +1312,19 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
                 }
               `}
             >
-              <Paperclip size={18} className="text-slate-400 hover:text-indigo-500 cursor-pointer transition-colors" />
               <input
                 type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Message AI..."
-                className="bg-transparent flex-1 outline-none text-[14px] sm:text-[15px] font-bold py-1 sm:py-2"
+                className={`bg-transparent flex-1 outline-none text-[14px] sm:text-[15px] font-bold py-1 sm:py-2 ${darkMode ? "text-white" : "text-slate-900"}`}
               />
-              <button className="w-11 h-11 sm:w-14 sm:h-14 bg-indigo-600 hover:bg-indigo-700 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all">
+              <button 
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                className="w-11 h-11 sm:w-14 sm:h-14 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
+              >
                 <Send size={18} />
               </button>
             </div>
@@ -1289,6 +1332,7 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
         </div>
       )}
 
+      {/* floating toggle button */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
         className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center text-white shadow-[0_25px_60px_-15px_rgba(79,70,229,0.5)] hover:scale-110 active:scale-90 transition-all ripple-btn border-2 sm:border-4 border-white/10"

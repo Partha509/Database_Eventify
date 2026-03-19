@@ -189,6 +189,18 @@ class ApiClient {
   }
 
  }
+
+ // --------- AI CHATBOT ---------
+  
+  // sending user text to our laravel backend which then talks to gemini
+  async chatWithAI(message: string): Promise<{ reply: string } | undefined> {
+    try {
+      const response = await this.client.post("/api/chat", { message });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 }
 
 export default ApiClient;
