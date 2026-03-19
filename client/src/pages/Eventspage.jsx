@@ -1214,7 +1214,7 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
 
   // fires when user clicks send or hits enter
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
     
     const userMsg = input;
     setInput(""); // clear input box immediately
@@ -1224,9 +1224,11 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
     try {
       const api = new ApiClient();
       const response = await api.chatWithAI(userMsg);
-      
-      if (response && response.reply) {
+
+      if (response?.reply) {
         setMessages((prev) => [...prev, { role: "bot", text: response.reply }]);
+      } else {
+        setMessages((prev) => [...prev, { role: "bot", text: "I couldn't generate a response right now. Please try again." }]);
       }
     } catch (err) {
       setMessages((prev) => [...prev, { role: "bot", text: "Oops, having trouble connecting to the server right now." }]);

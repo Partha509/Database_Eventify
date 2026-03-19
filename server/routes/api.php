@@ -13,10 +13,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\VenueController;
 
-<<<<<<< Updated upstream
-=======
 use App\Http\Controllers\API\ChatbotController;
->>>>>>> Stashed changes
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -57,41 +54,20 @@ Route::middleware('auth:api')->post('/reviews', [ReviewController::class, 'store
 // --- Events ---
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{id}', [EventController::class, 'show']);
-<<<<<<< Updated upstream
-Route::post('/events', [EventController::class, 'store']);
-Route::put('/events/{id}', [EventController::class, 'update']);
-Route::delete('/events/{id}', [EventController::class, 'destroy']);
-=======
 Route::middleware('auth:api')->post('/events', [EventController::class, 'store']);
 Route::middleware('auth:api')->put('/events/{id}', [EventController::class, 'update']);
 Route::middleware('auth:api')->delete('/events/{id}', [EventController::class, 'destroy']);
->>>>>>> Stashed changes
 
 // --- Tickets ---
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/{id}', [TicketController::class, 'show']);
-<<<<<<< Updated upstream
-Route::post('/tickets', [TicketController::class, 'store']);
-Route::put('/tickets/{id}', [TicketController::class, 'update']);
-Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
-=======
 Route::middleware('auth:api')->post('/tickets', [TicketController::class, 'store']);
 Route::middleware('auth:api')->put('/tickets/{id}', [TicketController::class, 'update']);
 Route::middleware('auth:api')->delete('/tickets/{id}', [TicketController::class, 'destroy']);
->>>>>>> Stashed changes
 
 // --- Bookings ---
 Route::get('/bookings', [BookingController::class, 'index']);
 Route::get('/bookings/{id}', [BookingController::class, 'show']);
-<<<<<<< Updated upstream
-Route::post('/bookings', [BookingController::class, 'store']);
-Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
-
-// --- Payments ---
-Route::get('/payments', [PaymentController::class, 'index']);
-Route::post('/payments', [PaymentController::class, 'store']);
-
-=======
 Route::middleware('auth:api')->post('/bookings', [BookingController::class, 'store']);
 Route::middleware('auth:api')->delete('/bookings/{id}', [BookingController::class, 'destroy']);
 
@@ -102,7 +78,6 @@ Route::middleware('auth:api')->post('/payments', [PaymentController::class, 'sto
 // --- AI Chatbot ---
 Route::post('/chat', [ChatbotController::class, 'handleChat'])->middleware('throttle:30,1');
 
->>>>>>> Stashed changes
 // --- Authenticated user info ---
 Route::middleware('auth:api')->get('/profile', [AuthController::class, 'profile']);
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {

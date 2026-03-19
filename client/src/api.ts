@@ -199,6 +199,7 @@ class ApiClient {
       return response.data;
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 }
