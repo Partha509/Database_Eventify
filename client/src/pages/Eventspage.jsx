@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useContext, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
-import { useAuth } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import {
   LayoutDashboard, Calendar, PlusSquare, Search, Bell,
   MapPin, ArrowRight, TrendingUp, Filter, X, SearchX,
@@ -73,21 +73,21 @@ const FEATURED_EVENTS = [
 ];
 
 const ALL_UPCOMING = [
-  { id: 6,  title: "Rock Legends Live",         image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80",  price: 125, date: "2026-08-05", category: "Music"    },
-  { id: 7,  title: "AI Expo 2026",              image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",  price: 199, date: "2026-04-18", category: "Tech"     },
-  { id: 8,  title: "World Cup Qualifier",       image: "https://static.independent.co.uk/2025/03/05/12/43/GettyImages-2200004063.jpeg?crop=1024,682.7,x0,y0.2&trim=0,0,0,0&width=1200", price: 500, date: "2026-09-12", category: "Sports"   },
-  { id: 9,  title: "Startup Pitch Night",       image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80",    price: 50,  date: "2026-02-28", category: "Business" },
-  { id: 10, title: "Jazz Night",                image: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80",  price: 65,  date: "2026-05-20", category: "Music"    },
-  { id: 11, title: "Street Food Festival",      image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",  price: 25,  date: "2026-06-01", category: "Food"     },
-  { id: 12, title: "Yoga & Mindfulness Expo",   image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80",    price: 55,  date: "2026-06-20", category: "Wellness" },
-  { id: 13, title: "Stand-Up Comedy Night",     image: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&q=80",  price: 45,  date: "2026-07-04", category: "Comedy"   },
-  { id: 14, title: "Blockchain World Forum",    image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",  price: 249, date: "2026-07-15", category: "Tech"     },
-  { id: 15, title: "Tennis Open 2026",          image: "https://images.unsplash.com/photo-1542144582-1ba00456b5e3?w=800&q=80",    price: 110, date: "2026-08-22", category: "Sports"   },
-  { id: 16, title: "Abstract Art Showcase",     image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80",    price: 35,  date: "2026-09-01", category: "Art"      },
-  { id: 17, title: "Mental Health Summit",      image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80",  price: 60,  date: "2026-09-05", category: "Wellness" },
-  { id: 18, title: "Improv Comedy Festival",    image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80",  price: 55,  date: "2026-09-18", category: "Comedy"   },
-  { id: 19, title: "Business Networking Mixer", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80",    price: 45,  date: "2026-05-10", category: "Business" },
-  { id: 20, title: "Electronic Music Night",    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80",  price: 90,  date: "2026-06-28", category: "Music"    },
+  { id: 6, title: "Rock Legends Live", image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80", price: 125, date: "2026-08-05", category: "Music" },
+  { id: 7, title: "AI Expo 2026", image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80", price: 199, date: "2026-04-18", category: "Tech" },
+  { id: 8, title: "World Cup Qualifier", image: "https://static.independent.co.uk/2025/03/05/12/43/GettyImages-2200004063.jpeg?crop=1024,682.7,x0,y0.2&trim=0,0,0,0&width=1200", price: 500, date: "2026-09-12", category: "Sports" },
+  { id: 9, title: "Startup Pitch Night", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80", price: 50, date: "2026-02-28", category: "Business" },
+  { id: 10, title: "Jazz Night", image: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80", price: 65, date: "2026-05-20", category: "Music" },
+  { id: 11, title: "Street Food Festival", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80", price: 25, date: "2026-06-01", category: "Food" },
+  { id: 12, title: "Yoga & Mindfulness Expo", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80", price: 55, date: "2026-06-20", category: "Wellness" },
+  { id: 13, title: "Stand-Up Comedy Night", image: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&q=80", price: 45, date: "2026-07-04", category: "Comedy" },
+  { id: 14, title: "Blockchain World Forum", image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80", price: 249, date: "2026-07-15", category: "Tech" },
+  { id: 15, title: "Tennis Open 2026", image: "https://images.unsplash.com/photo-1542144582-1ba00456b5e3?w=800&q=80", price: 110, date: "2026-08-22", category: "Sports" },
+  { id: 16, title: "Abstract Art Showcase", image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80", price: 35, date: "2026-09-01", category: "Art" },
+  { id: 17, title: "Mental Health Summit", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80", price: 60, date: "2026-09-05", category: "Wellness" },
+  { id: 18, title: "Improv Comedy Festival", image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80", price: 55, date: "2026-09-18", category: "Comedy" },
+  { id: 19, title: "Business Networking Mixer", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80", price: 45, date: "2026-05-10", category: "Business" },
+  { id: 20, title: "Electronic Music Night", image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80", price: 90, date: "2026-06-28", category: "Music" },
 ];
 
 const NOTIFICATIONS = [
@@ -282,9 +282,9 @@ function LogoIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="6" width="22" height="19" rx="3.5" fill="white" fillOpacity="0.15" />
       <rect x="3" y="6" width="22" height="19" rx="3.5" stroke="white" strokeWidth="1.8" />
-      <rect x="3" y="6" width="22" height="7"  rx="3.5" fill="white" fillOpacity="0.25" />
+      <rect x="3" y="6" width="22" height="7" rx="3.5" fill="white" fillOpacity="0.25" />
       <rect x="3" y="9.5" width="22" height="3.5" fill="white" fillOpacity="0.25" />
-      <line x1="9"  y1="3" x2="9"  y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="9" y1="3" x2="9" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <line x1="19" y1="3" x2="19" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M14 14.5L15.2 17.2L18.2 17.5L16.1 19.4L16.7 22.3L14 20.8L11.3 22.3L11.9 19.4L9.8 17.5L12.8 17.2L14 14.5Z"
@@ -368,7 +368,7 @@ function DesktopSidebar({ darkMode, navigate }) {
     rounded-[22px] font-bold text-[15px]
     transition-all duration-300 ripple-btn
   `;
-  const active   = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
+  const active = "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30";
   const inactive = darkMode
     ? "text-slate-400 hover:text-white hover:bg-white/5"
     : "text-slate-500 hover:bg-slate-50";
@@ -397,10 +397,10 @@ function DesktopSidebar({ darkMode, navigate }) {
       </div>
 
       <nav className="flex-1 px-6 space-y-3 mt-8">
-        <button onClick={() => navigate("/")}             className={`${navBase} ${active}`}>
+        <button onClick={() => navigate("/")} className={`${navBase} ${active}`}>
           <LayoutDashboard size={20} /> Explore
         </button>
-        <button onClick={() => navigate("/my-events")}    className={`${navBase} ${inactive}`}>
+        <button onClick={() => navigate("/my-events")} className={`${navBase} ${inactive}`}>
           <Calendar size={20} /> My Events
         </button>
         <button onClick={() => navigate("/create-event")} className={`${navBase} ${inactive}`}>
@@ -706,7 +706,7 @@ function TopBar({
   darkMode, navigate,
   searchQuery, setSearchQuery,
   showNotif, setShowNotif,
-  userInitials, isSearchActive, setIsSearchActive,
+  user, userInitials, isSearchActive, setIsSearchActive,
 }) {
   return (
     <header className="hidden md:flex items-center justify-between mb-10 lg:mb-12 gap-6 lg:gap-10 max-w-full mx-auto">
@@ -747,11 +747,24 @@ function TopBar({
 
       <div className="flex items-center gap-3 lg:gap-5 relative">
         <NotificationPanel darkMode={darkMode} showNotif={showNotif} setShowNotif={setShowNotif} />
-        <div onClick={() => navigate("/profile")} className="ml-1 lg:ml-2 cursor-pointer group">
-          <div className="w-11 h-11 lg:w-14 lg:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm lg:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-            {userInitials}
+
+        {user ? (
+          <div
+            onClick={() => navigate("/profile")}
+            className="ml-1 lg:ml-2 cursor-pointer group"
+          >
+            <div className="w-11 h-11 lg:w-14 lg:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm lg:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+              {userInitials}
+            </div>
           </div>
-        </div>
+        ) : (
+          <button
+            onClick={() => navigate("/login")}
+            className="ml-1 lg:ml-2 px-5 lg:px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-indigo-600/30 transition-all active:scale-95"
+          >
+            Log In
+          </button>
+        )}
       </div>
     </header>
   );
@@ -760,10 +773,10 @@ function TopBar({
 // ─── Featured Carousel ────────────────────────────────────────────────────────
 
 function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
-  const [current,   setCurrent]   = useState(0);
-  const [sliding,   setSliding]   = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [sliding, setSliding] = useState(false);
   const [direction, setDirection] = useState("next");
-  const timerRef   = useRef(null);
+  const timerRef = useRef(null);
   const slidingRef = useRef(false);
   const currentRef = useRef(0);
   const touchStartX = useRef(null);
@@ -1135,7 +1148,7 @@ function SearchOverlay({
 function EventGrid({ darkMode, navigate, filteredEvents, isSearchActive }) {
   const [showAll, setShowAll] = useState(false);
   const visibleEvents = showAll ? filteredEvents : filteredEvents.slice(0, INITIAL_VISIBLE);
-  const hiddenCount   = filteredEvents.length - INITIAL_VISIBLE;
+  const hiddenCount = filteredEvents.length - INITIAL_VISIBLE;
 
   return (
     <section
@@ -1215,7 +1228,7 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
   // fires when user clicks send or hits enter
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    
+
     const userMsg = input;
     setInput(""); // clear input box immediately
     setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
@@ -1279,18 +1292,17 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`max-w-[80%] p-4 rounded-2xl text-sm font-bold ${
-                  msg.role === "user"
-                    ? "bg-indigo-600 text-white self-end rounded-br-sm"
-                    : darkMode
+                className={`max-w-[80%] p-4 rounded-2xl text-sm font-bold ${msg.role === "user"
+                  ? "bg-indigo-600 text-white self-end rounded-br-sm"
+                  : darkMode
                     ? "bg-white/10 text-slate-200 self-start rounded-bl-sm"
                     : "bg-slate-100 text-slate-800 self-start rounded-bl-sm"
-                }`}
+                  }`}
               >
                 {msg.text}
               </div>
             ))}
-            
+
             {/* show a little typing indicator when waiting for gemini */}
             {isLoading && (
               <div className={`max-w-[80%] p-4 rounded-2xl text-sm font-bold self-start rounded-bl-sm flex gap-1 items-center h-12 ${darkMode ? "bg-white/10" : "bg-slate-100"}`}>
@@ -1322,7 +1334,7 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
                 placeholder="Message AI..."
                 className={`bg-transparent flex-1 outline-none text-[14px] sm:text-[15px] font-bold py-1 sm:py-2 ${darkMode ? "text-white" : "text-slate-900"}`}
               />
-              <button 
+              <button
                 onClick={handleSend}
                 disabled={isLoading || !input.trim()}
                 className="w-11 h-11 sm:w-14 sm:h-14 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
@@ -1348,35 +1360,39 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Eventpage() {
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
-  const { user }     = useAuth();
-  const loaded       = usePageLoad(500);
+  const { user } = useContext(AuthContext);
+  const loaded = usePageLoad(500);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery,      setSearchQuery]       = useState("");
-  const [showFilters,      setShowFilters]       = useState(false);
-  const [priceRange,       setPriceRange]        = useState(1000);
-  const [startDate,        setStartDate]         = useState("");
-  const [endDate,          setEndDate]           = useState("");
-  const [isChatOpen,       setIsChatOpen]        = useState(false);
-  const [showNotif,        setShowNotif]         = useState(false);
-  const [isSearchActive,   setIsSearchActive]    = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState(1000);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const userInitials = useMemo(() => {
-    if (user?.fullName  && user.fullName.trim().length  > 0) return user.fullName.trim().slice(0, 2).toUpperCase();
-    if (user?.user_name && user.user_name.trim().length > 0) return user.user_name.trim().slice(0, 2).toUpperCase();
-    return "U";
+    if (!user) return null;
+    const name = user.user_name || user.fullName || "";
+    const parts = name.trim().split(" ");
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : name.slice(0, 2);
+    return initials.toUpperCase() || "?";
   }, [user]);
 
   const filteredEvents = useMemo(() => {
     return ALL_UPCOMING.filter((event) => {
       const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
-      const matchesSearch   = event.title.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesPrice    = event.price <= priceRange;
-      const eventDate       = new Date(event.date);
-      const matchesStart    = !startDate || eventDate >= new Date(startDate);
-      const matchesEnd      = !endDate   || eventDate <= new Date(endDate);
+      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPrice = event.price <= priceRange;
+      const eventDate = new Date(event.date);
+      const matchesStart = !startDate || eventDate >= new Date(startDate);
+      const matchesEnd = !endDate || eventDate <= new Date(endDate);
       return matchesCategory && matchesSearch && matchesPrice && matchesStart && matchesEnd;
     });
   }, [selectedCategory, searchQuery, priceRange, startDate, endDate]);
@@ -1393,7 +1409,7 @@ export default function Eventpage() {
 
       {/* ── Sidebars ── */}
       <DesktopSidebar darkMode={darkMode} navigate={navigate} />
-      <TabletSidebar  darkMode={darkMode} navigate={navigate} />
+      <TabletSidebar darkMode={darkMode} navigate={navigate} />
 
       {/* ── Main content ── */}
       <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-5 sm:py-8 lg:py-10 relative overflow-x-hidden no-scrollbar pb-28 md:pb-10">
@@ -1418,6 +1434,7 @@ export default function Eventpage() {
             setSearchQuery={setSearchQuery}
             showNotif={showNotif}
             setShowNotif={setShowNotif}
+            user={user}
             userInitials={userInitials}
             isSearchActive={isSearchActive}
             setIsSearchActive={setIsSearchActive}

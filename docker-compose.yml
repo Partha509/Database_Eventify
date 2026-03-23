@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_DATABASE: event_management 
+      MYSQL_DATABASE: event_management
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -30,8 +30,8 @@ services:
     depends_on:
       - database
     volumes:
-      - ./server:/app            
-      - ./database:/app/database 
+      - ./server:/app
+      - ./database:/app/database
       - server_vendor:/app/vendor
     environment:
       DB_CONNECTION: mysql
@@ -48,8 +48,8 @@ services:
     depends_on:
       - server
     volumes:
-      - ./client:/app        
-      - /app/node_modules        
+      - ./client:/app
+      - /app/node_modules
 
 volumes:
   mysql_data:

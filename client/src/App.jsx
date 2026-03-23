@@ -61,7 +61,7 @@ function App() {
       <ThemeProvider>
         {/* ADDED TOASTER HERE TO SHOW ERROR/SUCCESS POPUPS */}
         <Toaster position="top-center" />
-        
+
         <AppLayout>
           <Routes>
             <Route path="/" element={<EventsPage />} />

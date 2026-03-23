@@ -1,7 +1,7 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
-import { useAuth } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import {
   UploadCloud, CalendarDays, Clock3,
   LayoutDashboard, Calendar, PlusSquare, TrendingUp,
@@ -24,9 +24,9 @@ function LogoIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="6" width="22" height="19" rx="3.5" fill="white" fillOpacity="0.15" />
       <rect x="3" y="6" width="22" height="19" rx="3.5" stroke="white" strokeWidth="1.8" />
-      <rect x="3" y="6" width="22" height="7"  rx="3.5" fill="white" fillOpacity="0.25" />
+      <rect x="3" y="6" width="22" height="7" rx="3.5" fill="white" fillOpacity="0.25" />
       <rect x="3" y="9.5" width="22" height="3.5" fill="white" fillOpacity="0.25" />
-      <line x1="9"  y1="3" x2="9"  y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="9" y1="3" x2="9" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <line x1="19" y1="3" x2="19" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M14 14.5L15.2 17.2L18.2 17.5L16.1 19.4L16.7 22.3L14 20.8L11.3 22.3L11.9 19.4L9.8 17.5L12.8 17.2L14 14.5Z"
@@ -115,23 +115,27 @@ function MobileBottomNav({ darkMode, navigate }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function CreateEvent() {
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
   const { darkMode } = useContext(ThemeContext);
-  const { user }     = useAuth();
+  const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "", category: "", date: "",
     time: "", location: "", price: "", description: "",
   });
-  const [coverImage,   setCoverImage]   = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  const userInitials = user?.fullName && user.fullName.trim().length > 0
-    ? user.fullName.trim().slice(0, 2).toUpperCase()
-    : user?.user_name && user.user_name.trim().length > 0
-      ? user.user_name.trim().slice(0, 2).toUpperCase()
-      : "U";
+  const userInitials = useMemo(() => {
+    if (!user) return null;
+    const name = user.user_name || user.fullName || "";
+    const parts = name.trim().split(" ");
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : name.slice(0, 2);
+    return initials.toUpperCase() || "?";
+  }, [user]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -160,7 +164,7 @@ export default function CreateEvent() {
   const handlePublish = (e) => {
     e.preventDefault();
     const required = ["title", "category", "date", "location", "description"];
-    const missing  = required.filter((f) => !formData[f]);
+    const missing = required.filter((f) => !formData[f]);
     if (missing.length > 0 || !coverImage) {
       return alert("Please fill in all required fields (*) and upload a cover image.");
     }
@@ -205,7 +209,7 @@ export default function CreateEvent() {
       <AnimationStyles />
 
       <DesktopSidebar darkMode={darkMode} navigate={navigate} />
-      <TabletSidebar  darkMode={darkMode} navigate={navigate} />
+      <TabletSidebar darkMode={darkMode} navigate={navigate} />
 
       <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-5 sm:py-8 lg:py-10 relative overflow-y-auto pb-28 md:pb-10">
 
@@ -220,11 +224,20 @@ export default function CreateEvent() {
                 Fill in the details below to host your experience
               </p>
             </div>
-            <div onClick={() => navigate("/profile")} className="cursor-pointer group shrink-0">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm sm:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-                {userInitials}
+            {user ? (
+              <div onClick={() => navigate("/profile")} className="cursor-pointer group shrink-0">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm sm:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+                  {userInitials}
+                </div>
               </div>
-            </div>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="shrink-0 px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black rounded-2xl shadow-xl shadow-indigo-600/30 transition-all active:scale-95"
+              >
+                Log In
+              </button>
+            )}
           </header>
         </FadeIn>
 

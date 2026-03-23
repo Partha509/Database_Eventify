@@ -1,7 +1,7 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
-import { useAuth } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import {
   Calendar, Clock, MapPin, Users, ArrowLeft,
   Bell, Ticket, PartyPopper, Info,
@@ -79,9 +79,9 @@ function LogoIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="6" width="22" height="19" rx="3.5" fill="white" fillOpacity="0.15" />
       <rect x="3" y="6" width="22" height="19" rx="3.5" stroke="white" strokeWidth="1.8" />
-      <rect x="3" y="6" width="22" height="7"  rx="3.5" fill="white" fillOpacity="0.25" />
+      <rect x="3" y="6" width="22" height="7" rx="3.5" fill="white" fillOpacity="0.25" />
       <rect x="3" y="9.5" width="22" height="3.5" fill="white" fillOpacity="0.25" />
-      <line x1="9"  y1="3" x2="9"  y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="9" y1="3" x2="9" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <line x1="19" y1="3" x2="19" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M14 14.5L15.2 17.2L18.2 17.5L16.1 19.4L16.7 22.3L14 20.8L11.3 22.3L11.9 19.4L9.8 17.5L12.8 17.2L14 14.5Z"
@@ -158,9 +158,9 @@ function DesktopSidebar({ dm, navigate }) {
       </div>
       <nav className="flex-1 px-6 space-y-3 mt-8">
         {[
-          { icon: <LayoutDashboard size={20} />, label: "Explore",      path: "/"             },
-          { icon: <Calendar size={20} />,        label: "My Events",    path: "/my-events"    },
-          { icon: <PlusSquare size={20} />,      label: "Create Event", path: "/create-event" },
+          { icon: <LayoutDashboard size={20} />, label: "Explore", path: "/" },
+          { icon: <Calendar size={20} />, label: "My Events", path: "/my-events" },
+          { icon: <PlusSquare size={20} />, label: "Create Event", path: "/create-event" },
         ].map((item) => (
           <button
             key={item.path}
@@ -199,8 +199,8 @@ function TabletSidebar({ dm, navigate }) {
       <nav className="flex flex-col gap-3 px-3 flex-1">
         {[
           { icon: <LayoutDashboard size={20} />, path: "/" },
-          { icon: <Calendar size={20} />,        path: "/my-events" },
-          { icon: <PlusSquare size={20} />,      path: "/create-event" },
+          { icon: <Calendar size={20} />, path: "/my-events" },
+          { icon: <PlusSquare size={20} />, path: "/create-event" },
         ].map((item) => (
           <button
             key={item.path}
@@ -268,17 +268,17 @@ function MobileBottomNav({ dm, navigate }) {
 // ─── Checkout Panel ───────────────────────────────────────────────────────────
 
 function CheckoutPanel({ event, dm, onClose, onConfirmed }) {
-  const [step,     setStep]     = useState(1);
+  const [step, setStep] = useState(1);
   const [quantity, setQuantity] = useState(1);
-  const [loading,  setLoading]  = useState(false);
-  const [details,  setDetails]  = useState({
+  const [loading, setLoading] = useState(false);
+  const [details, setDetails] = useState({
     name: "", email: "", phone: "",
     bkashNumber: "", bkashPin: "",
   });
 
   const serviceFee = 550;
-  const subtotal   = event.price * quantity;
-  const total      = subtotal + serviceFee;
+  const subtotal = event.price * quantity;
+  const total = subtotal + serviceFee;
 
   const handleDetailChange = (e) => {
     const { name, value } = e.target;
@@ -483,9 +483,9 @@ function CheckoutPanel({ event, dm, onClose, onConfirmed }) {
                 <h4 className={`font-black text-sm flex items-center gap-2 ${dm ? "text-white" : "text-slate-900"}`}>
                   <User size={15} className="text-indigo-500" /> Personal Info
                 </h4>
-                <input name="name"  value={details.name}  onChange={handleDetailChange} placeholder="Full name"      className={inputClass} />
-                <input name="email" value={details.email} onChange={handleDetailChange} placeholder="Email address"  className={inputClass} type="email" />
-                <input name="phone" value={details.phone} onChange={handleDetailChange} placeholder="Phone number"   className={inputClass} type="tel" />
+                <input name="name" value={details.name} onChange={handleDetailChange} placeholder="Full name" className={inputClass} />
+                <input name="email" value={details.email} onChange={handleDetailChange} placeholder="Email address" className={inputClass} type="email" />
+                <input name="phone" value={details.phone} onChange={handleDetailChange} placeholder="Phone number" className={inputClass} type="tel" />
               </div>
 
               {/* bKash */}
@@ -684,12 +684,12 @@ function CheckoutPanel({ event, dm, onClose, onConfirmed }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function EventDetails() {
-  const { id }                          = useParams();
-  const navigate                        = useNavigate();
-  const { darkMode, setDarkMode }       = useContext(ThemeContext);
-  const { user }                        = useAuth();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
+  const { user, login, logout } = useContext(AuthContext);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isBooked,     setIsBooked]     = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
 
   const event = ALL_EVENTS.find((e) => e.id === parseInt(id)) || ALL_EVENTS[0];
   if (!event) {
@@ -699,11 +699,15 @@ export default function EventDetails() {
   const dm = darkMode;
   const loaded = usePageLoad(400);
 
-  const userInitials = user?.fullName && user.fullName.trim().length > 0
-    ? user.fullName.trim().slice(0, 2).toUpperCase()
-    : user?.user_name && user.user_name.trim().length > 0
-      ? user.user_name.trim().slice(0, 2).toUpperCase()
-      : "U";
+  const userInitials = useMemo(() => {
+    if (!user) return null;
+    const name = user.user_name || user.fullName || "";
+    const parts = name.trim().split(" ");
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : name.slice(0, 2);
+    return initials.toUpperCase() || "?";
+  }, [user]);
 
   return (
     <div
@@ -733,7 +737,7 @@ export default function EventDetails() {
 
       {/* Sidebars */}
       <DesktopSidebar dm={dm} navigate={navigate} />
-      <TabletSidebar  dm={dm} navigate={navigate} />
+      <TabletSidebar dm={dm} navigate={navigate} />
 
       {/* Main */}
       <main className="flex-1 min-w-0 overflow-x-hidden no-scrollbar pb-24 md:pb-0">
@@ -759,12 +763,20 @@ export default function EventDetails() {
           >
             <ArrowLeft size={14} strokeWidth={2.5} /> Back
           </button>
-
-          <div onClick={() => navigate("/profile")} className="cursor-pointer group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-xs sm:text-sm font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-              {userInitials}
+          {user ? (
+            <div onClick={() => navigate("/profile")} className="cursor-pointer group">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-xs sm:text-sm font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+                {userInitials}
+              </div>
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => navigate("/login")}
+              className="px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black rounded-xl sm:rounded-2xl shadow-xl shadow-indigo-600/30 transition-all active:scale-95"
+            >
+              Log In
+            </button>
+          )}
         </header>
 
         {/* Page content */}
@@ -836,10 +848,10 @@ export default function EventDetails() {
                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest mb-4 sm:mb-5 text-slate-400">Event Details</h3>
 
                 <div className="space-y-4 sm:space-y-5 mb-5 sm:mb-7">
-                  <DetailItem icon={<Calendar />} label="Date"      value={event.date}      dm={dm} />
-                  <DetailItem icon={<Clock />}    label="Time"      value={event.time}      dm={dm} />
-                  <DetailItem icon={<MapPin />}   label="Location"  value={event.location}  dm={dm} />
-                  <DetailItem icon={<Users />}    label="Attendees" value={event.attendees} dm={dm} />
+                  <DetailItem icon={<Calendar />} label="Date" value={event.date} dm={dm} />
+                  <DetailItem icon={<Clock />} label="Time" value={event.time} dm={dm} />
+                  <DetailItem icon={<MapPin />} label="Location" value={event.location} dm={dm} />
+                  <DetailItem icon={<Users />} label="Attendees" value={event.attendees} dm={dm} />
                 </div>
 
                 <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
