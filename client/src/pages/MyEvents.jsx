@@ -1,7 +1,7 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
-import { useAuth } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import {
   Calendar, MapPin, Users, DollarSign, Eye,
   TrendingUp, LayoutDashboard, PlusSquare, User,
@@ -18,10 +18,10 @@ import {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { id: 1, label: "Total Events",    value: "12",      icon: <TrendingUp size={24} />  },
-  { id: 2, label: "Total Attendees", value: "2,847",   icon: <Users size={24} />       },
-  { id: 3, label: "Total Revenue",   value: "$18,420", icon: <DollarSign size={24} />  },
-  { id: 4, label: "Total Views",     value: "15,634",  icon: <Eye size={24} />         },
+  { id: 1, label: "Total Events", value: "12", icon: <TrendingUp size={24} /> },
+  { id: 2, label: "Total Attendees", value: "2,847", icon: <Users size={24} /> },
+  { id: 3, label: "Total Revenue", value: "$18,420", icon: <DollarSign size={24} /> },
+  { id: 4, label: "Total Views", value: "15,634", icon: <Eye size={24} /> },
 ];
 
 const HOSTED_EVENTS = [
@@ -73,9 +73,9 @@ function LogoIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="6" width="22" height="19" rx="3.5" fill="white" fillOpacity="0.15" />
       <rect x="3" y="6" width="22" height="19" rx="3.5" stroke="white" strokeWidth="1.8" />
-      <rect x="3" y="6" width="22" height="7"  rx="3.5" fill="white" fillOpacity="0.25" />
+      <rect x="3" y="6" width="22" height="7" rx="3.5" fill="white" fillOpacity="0.25" />
       <rect x="3" y="9.5" width="22" height="3.5" fill="white" fillOpacity="0.25" />
-      <line x1="9"  y1="3" x2="9"  y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="9" y1="3" x2="9" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <line x1="19" y1="3" x2="19" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path d="M14 14.5L15.2 17.2L18.2 17.5L16.1 19.4L16.7 22.3L14 20.8L11.3 22.3L11.9 19.4L9.8 17.5L12.8 17.2L14 14.5Z" fill="white" stroke="white" strokeWidth="0.5" />
     </svg>
@@ -161,17 +161,21 @@ function MobileBottomNav({ darkMode, navigate }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function MyEvents() {
-  const navigate                  = useNavigate();
+  const navigate = useNavigate();
   const { darkMode, setDarkMode } = useContext(ThemeContext);
-  const { user }                  = useAuth();
+  const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState("hosting");
-  const loaded                    = usePageLoad(500);
+  const loaded = usePageLoad(500);
 
-  const userInitials = user?.fullName && user.fullName.trim().length > 0
-    ? user.fullName.trim().slice(0, 2).toUpperCase()
-    : user?.user_name && user.user_name.trim().length > 0
-      ? user.user_name.trim().slice(0, 2).toUpperCase()
-      : "U";
+  const userInitials = useMemo(() => {
+    if (!user) return null;
+    const name = user.user_name || user.fullName || "";
+    const parts = name.trim().split(" ");
+    const initials = parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : name.slice(0, 2);
+    return initials.toUpperCase() || "?";
+  }, [user]);
 
   return (
     <div className={`flex min-h-screen w-full transition-colors duration-500 font-sans ${darkMode ? "bg-[#0F0121] text-white" : "bg-[#F8FAFC] text-slate-900"}`}>
@@ -185,7 +189,7 @@ export default function MyEvents() {
       <AnimationStyles />
 
       <DesktopSidebar darkMode={darkMode} navigate={navigate} />
-      <TabletSidebar  darkMode={darkMode} navigate={navigate} />
+      <TabletSidebar darkMode={darkMode} navigate={navigate} />
 
       <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-5 sm:py-8 lg:py-10 overflow-y-auto pb-28 md:pb-10">
 
@@ -200,11 +204,20 @@ export default function MyEvents() {
                 Manage and track your hosting performance
               </p>
             </div>
-            <div onClick={() => navigate("/profile")} className="cursor-pointer group ml-2">
-              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm sm:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
-                {userInitials}
+            {user ? (
+              <div onClick={() => navigate("/profile")} className="cursor-pointer group ml-2">
+                <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-sm sm:text-lg font-black shadow-xl shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+                  {userInitials}
+                </div>
               </div>
-            </div>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="ml-2 px-4 py-2 sm:px-6 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black rounded-2xl shadow-xl shadow-indigo-600/30 transition-all active:scale-95"
+              >
+                Log In
+              </button>
+            )}
           </header>
         </FadeIn>
 

@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
+import { AuthContext } from "../context/AuthContext";
 import ApiClient from "../api";
 import {
   ChevronLeft, Mail, Phone, MapPin, Moon, Sun,
@@ -20,9 +21,9 @@ function LogoIcon() {
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="3" y="6" width="22" height="19" rx="3.5" fill="white" fillOpacity="0.15" />
       <rect x="3" y="6" width="22" height="19" rx="3.5" stroke="white" strokeWidth="1.8" />
-      <rect x="3" y="6" width="22" height="7"  rx="3.5" fill="white" fillOpacity="0.25" />
+      <rect x="3" y="6" width="22" height="7" rx="3.5" fill="white" fillOpacity="0.25" />
       <rect x="3" y="9.5" width="22" height="3.5" fill="white" fillOpacity="0.25" />
-      <line x1="9"  y1="3" x2="9"  y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <line x1="9" y1="3" x2="9" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <line x1="19" y1="3" x2="19" y2="9" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M14 14.5L15.2 17.2L18.2 17.5L16.1 19.4L16.7 22.3L14 20.8L11.3 22.3L11.9 19.4L9.8 17.5L12.8 17.2L14 14.5Z"
@@ -85,41 +86,44 @@ function MobileBottomNav({ darkMode, navigate }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Profile() {
-  const navigate                                  = useNavigate();
-  const { darkMode, setDarkMode }                 = useContext(ThemeContext);
+  const navigate = useNavigate();
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [user, setUser]                           = useState(null);
-  const loaded                                    = usePageLoad(400);
+  const { user, setUser, logout } = useContext(AuthContext);
+  const loaded = usePageLoad(400);
 
   const api = new ApiClient();
 
   const profileStats = [
-    { label: "Hosted",    value: "12"  },
-    { label: "Attended",  value: "28"  },
+    { label: "Hosted", value: "12" },
+    { label: "Attended", value: "28" },
     { label: "Following", value: "145" },
   ];
 
   const moreOptions = [
-    { icon: <Bell size={20} />,        label: "Notifications"      },
+    { icon: <Bell size={20} />, label: "Notifications" },
     { icon: <ShieldCheck size={20} />, label: "Privacy & Security" },
-    { icon: <HelpCircle size={20} />,  label: "Help & Support"     },
+    { icon: <HelpCircle size={20} />, label: "Help & Support" },
   ];
 
-  // ── Load user ──────────────────────────────────────────────────────────────
-
+  // ── Fetch full profile from API (gets phone + any extra fields) ─────────────
   useEffect(() => {
+    if (!user) return;
     const loadProfile = async () => {
       const data = await api.getProfile();
-      if (data) setUser(data);
+      if (data) {
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+      }
     };
     loadProfile();
   }, []);
 
   // ── Logout ─────────────────────────────────────────────────────────────────
-
   const handleLogout = async () => {
     await api.logout();
-    navigate("/login");
+    logout();
+    navigate("/");
   };
 
   return (

@@ -1,158 +1,287 @@
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import ApiClient from "../api"; // import your ApiClient
+import ApiClient from "../api";
+import { AuthContext } from "../context/AuthContext";
+import { ThemeContext } from "../App";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useContext(AuthContext);
+  const { darkMode } = useContext(ThemeContext);
 
   const api = new ApiClient();
+
+  const FEATURES = [
+    {
+      icon: "🎵",
+      title: "Discover Events",
+      desc: "Explore thousands of music, tech, sports and cultural events near you.",
+    },
+    {
+      icon: "🎟️",
+      title: "Instant Booking",
+      desc: "Reserve tickets in seconds with secure, hassle-free checkout.",
+    },
+    {
+      icon: "📊",
+      title: "Host & Manage",
+      desc: "Create your own events and track attendance, revenue and growth.",
+    },
+  ];
+
+  const [activeFeature, setActiveFeature] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveFeature((prev) => (prev + 1) % FEATURES.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.login(form.email, form.password);
 
-  try {
-    const response = await api.login(form.email, form.password);
+      if (response && response.token) {
+        localStorage.setItem("token", response.token);
 
-    if (response && response.token) {
-      localStorage.setItem("token", response.token);
-      navigate("/"); // go to EventsPage after login
+        const profile = await api.getProfile();
+        if (profile) {
+          login({
+            user_name: profile.user_name || "",
+            email: profile.email || "",
+            phone: profile.phone || "",
+          });
+        } else {
+          login({
+            user_name: response.user_name || "",
+            email: response.email || "",
+            phone: response.phone || "",
+          });
+        }
+
+        navigate("/");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed");
     }
-
-  } catch (err) {
-    setError(err.message || "Login failed");
-  }
-};
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-4 cursor-pointer"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
-            onClick={() => navigate("/")}
-          >
-            📅
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Sign in to your Eventify account
-          </p>
-        </div>
+    <div
+      className="min-h-screen flex items-center justify-center px-4 transition-colors duration-500"
+      style={{ background: darkMode ? "#0F0121" : "#F8FAFC" }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+        .auth-wrap * { font-family: 'Outfit', sans-serif; }
+        .auth-input { background: transparent; color: ${darkMode ? "white" : "#0f172a"}; width: 100%; font-size: 0.875rem; }
+        .auth-input:focus { outline: none; }
+        .auth-input::placeholder { color: #64748b; }
+      `}</style>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-gray-700">
-                Email Address
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                  ✉️
-                </span>
+      <div className="auth-wrap w-full max-w-4xl">
+
+        {/* ── MAIN CARD ── */}
+        <div
+          className="flex rounded-[28px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
+          style={{ minHeight: "500px" }}
+        >
+
+          {/* ── LEFT PANEL ── */}
+          <div
+            className="relative hidden md:flex flex-col justify-center px-12 py-10 overflow-hidden"
+            style={{ width: "42%", background: "#4338ca" }}
+          >
+            {/* Blob top-left */}
+            <div className="absolute" style={{ width: 340, height: 340, borderRadius: "50%", background: "linear-gradient(135deg, #818cf8, #6366f1)", top: -90, left: -70, opacity: 0.6 }} />
+            {/* Blob bottom-left */}
+            <div className="absolute" style={{ width: 210, height: 210, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #4f46e5)", bottom: 10, left: -30, opacity: 0.5 }} />
+            {/* Blob bottom-center */}
+            <div className="absolute" style={{ width: 155, height: 155, borderRadius: "50%", background: "linear-gradient(135deg, #a5b4fc, #818cf8)", bottom: 50, left: 165, opacity: 0.45 }} />
+
+            {/* Welcome text */}
+            <div className="relative z-10">
+              <h2 className="text-white font-extrabold leading-tight" style={{ fontSize: "2.4rem", fontFamily: "'Outfit', sans-serif" }}>
+                Welcome to<br />Eventify
+              </h2>
+            </div>
+
+            {/* Feature carousel */}
+            <div className="relative z-10 mt-10">
+              <div
+                className="rounded-2xl px-6 py-5 transition-all duration-500"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">{FEATURES[activeFeature].icon}</span>
+                  <div>
+                    <p className="text-white font-black text-base">{FEATURES[activeFeature].title}</p>
+                    <p className="text-indigo-200 text-sm font-medium mt-1 leading-relaxed">
+                      {FEATURES[activeFeature].desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dot indicators */}
+              <div className="flex items-center gap-2 mt-4 justify-center">
+                {FEATURES.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveFeature(i)}
+                    className="transition-all duration-300 rounded-full"
+                    style={{
+                      width: i === activeFeature ? "20px" : "6px",
+                      height: "6px",
+                      background: i === activeFeature ? "white" : "rgba(255,255,255,0.35)",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── RIGHT PANEL ── */}
+          <div
+            className="flex flex-col justify-center px-10 py-10 flex-1"
+            style={{ background: darkMode ? "#1E0B3B" : "#ffffff" }}
+          >
+            <h1 className={`${darkMode ? "text-white" : "text-slate-900"} font-bold mb-8`} style={{ fontSize: "1.75rem", fontFamily: "'Outfit', sans-serif" }}>
+              Log In
+            </h1>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
+              {/* Email */}
+              <div
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
+                style={{
+                  background: darkMode ? "#0F0121" : "#f1f5f9",
+                  border: `1.5px solid ${darkMode ? "#2d3650" : "#e2e8f0"}`
+                }}
+              >
+                <Mail size={16} className="text-slate-400 shrink-0" />
                 <input
                   type="email"
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="you@example.com"
+                  placeholder="Email"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+                  className="auth-input"
                 />
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold text-gray-700">
-                  Password
-                </label>
-                <a
-                  href="#"
-                  className="text-xs text-violet-600 hover:text-violet-700 font-medium"
-                >
-                  Forgot password?
-                </a>
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                  🔒
-                </span>
+              {/* Password */}
+              <div
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
+                style={{
+                  background: darkMode ? "#0F0121" : "#f1f5f9",
+                  border: `1.5px solid ${darkMode ? "#2d3650" : "#e2e8f0"}`
+                }}
+              >
+                <Lock size={16} className="text-slate-400 shrink-0" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={form.password}
                   onChange={handleChange}
+                  placeholder="Password"
                   required
-                  className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition-all bg-gray-50 focus:bg-white"
+                  className="auth-input"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm"
-                >
-                  {showPassword ? "🙈" : "👁️"}
+                  className="text-slate-400 hover:text-indigo-400 transition-colors shrink-0">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
-                ⚠️ {error}
+              {/* Remember me + Forgot password */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <div
+                    onClick={() => setRememberMe(!rememberMe)}
+                    className="w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-all shrink-0"
+                    style={{
+                      background: rememberMe ? "#6366f1" : "transparent",
+                      border: `2px solid ${rememberMe ? "#6366f1" : "#4b5563"}`,
+                    }}
+                  >
+                    {rememberMe && (
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-sm font-medium ${darkMode ? "text-slate-300" : "text-slate-600"}`}>Remember me</span>
+                </label>
+                <a href="#" className={`text-sm hover:text-indigo-500 transition-colors font-medium ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
+                  Forgot Password?
+                </a>
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all hover:opacity-90 active:scale-95 mt-1"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
-            >
-              Sign In
-            </button>
-          </form>
+              {/* Error */}
+              {error && (
+                <div
+                  className="text-sm px-4 py-2.5 rounded-xl"
+                  style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}
+                >
+                  ⚠️ {error}
+                </div>
+              )}
 
-          {/* OR Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">OR</span>
-            <div className="flex-1 h-px bg-gray-200" />
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all hover:brightness-110 active:scale-95 mt-1"
+                style={{ background: "linear-gradient(90deg, #4f46e5, #6366f1)" }}
+              >
+                Log In
+              </button>
+
+            </form>
+
+            {/* Register link */}
+            <p className="text-slate-500 text-sm text-center mt-6">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                Sign Up
+              </Link>
+            </p>
           </div>
-
-          {/* Register Link */}
-          <p className="text-center text-sm text-gray-500">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="text-violet-600 hover:text-violet-700 font-semibold"
-            >
-              Register
-            </Link>
-          </p>
         </div>
 
-        {/* Back Link */}
-        <p className="text-center text-xs text-gray-400 mt-6">
-          <span
-            className="cursor-pointer hover:text-violet-600 transition-colors"
+        {/* ── BACK LINK ── */}
+        <div className="flex justify-center mt-6">
+          <button
             onClick={() => navigate("/")}
+            className="group flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-300 border hover:scale-105 active:scale-95"
+            style={{
+              background: darkMode ? "#1E0B3B" : "#ffffff",
+              border: `1.5px solid ${darkMode ? "#2d3650" : "#e2e8f0"}`,
+              color: darkMode ? "#94a3b8" : "#64748b",
+            }}
           >
-            ← Back to EventHub
-          </span>
-        </p>
+            <ArrowRight size={14} className="text-indigo-400 rotate-180 group-hover:translate-x-1 transition-transform duration-200" />
+            <span className={darkMode ? "text-slate-300 group-hover:text-white" : "text-slate-600 group-hover:text-indigo-600"} style={{ transition: "color 0.2s" }}>
+              Back to Eventify
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
