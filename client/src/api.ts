@@ -202,6 +202,17 @@ class ApiClient {
       throw error;
     }
   }
+
+  // --------- AI EVENT GENERATOR ---------
+  
+  async generateEvent(keywords: string): Promise<{ title: string, description: string, tags: string } | undefined> {
+    try {
+      const response = await this.client.post("/api/generate-event", { keywords });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 }
 
 export default ApiClient;
