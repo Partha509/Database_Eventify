@@ -78,6 +78,9 @@ Route::middleware('auth:api')->post('/payments', [PaymentController::class, 'sto
 // --- AI Chatbot ---
 Route::post('/chat', [ChatbotController::class, 'handleChat'])->middleware('throttle:30,1');
 
+// --- AI Description ---
+Route::post('/generate-event', [ChatbotController::class, 'generateEventContent']);
+
 // --- Authenticated user info ---
 Route::middleware('auth:api')->get('/profile', [AuthController::class, 'profile']);
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {

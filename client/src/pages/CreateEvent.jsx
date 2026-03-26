@@ -6,9 +6,10 @@ import {
   UploadCloud, CalendarDays, Clock3,
   LayoutDashboard, Calendar, PlusSquare, TrendingUp,
   MapPin, DollarSign, Type, AlignLeft, PartyPopper, X,
-  Bell, User,
+  Bell, User, Sparkles, Wand2, // added icons for the AI widget
 } from "lucide-react";
 import { AnimationStyles, FadeIn, SlideIn } from "../components/ui";
+import ApiClient from "../api"; // bringing in our api client for gemini
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -127,6 +128,10 @@ export default function CreateEvent() {
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
+  // states for the ai content generator
+  const [aiKeywords, setAiKeywords] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const userInitials = useMemo(() => {
     if (!user) return null;
     const name = user.user_name || user.fullName || "";
@@ -159,6 +164,30 @@ export default function CreateEvent() {
     setCoverImage(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // call our laravel endpoint to get title and description from gemini
+  const handleMagicGenerate = async () => {
+    if (!aiKeywords.trim()) return;
+    setIsGenerating(true);
+    
+    try {
+      const api = new ApiClient();
+      const generatedData = await api.generateEvent(aiKeywords);
+      
+      if (generatedData) {
+        // update the form inputs with what gemini returned
+        setFormData((prev) => ({
+          ...prev,
+          title: generatedData.title || prev.title,
+          description: generatedData.description || prev.description,
+        }));
+      }
+    } catch (error) {
+      console.error("AI generation failed:", error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handlePublish = (e) => {
@@ -243,6 +272,52 @@ export default function CreateEvent() {
 
         {/* Form */}
         <div className="max-w-[1100px] mx-auto pb-10 sm:pb-32">
+          
+          {/* AI Generator Box - sits above the form so organizers see it first */}
+          <FadeIn delay={40}>
+            <div className={`mb-8 sm:mb-10 rounded-[32px] p-6 sm:p-8 shadow-2xl relative overflow-hidden border ${darkMode ? 'bg-gradient-to-br from-indigo-900 via-[#1E0B3B] to-[#0F0121] border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 via-white to-indigo-50/50 border-indigo-100'}`}>
+              
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30 shrink-0 border border-white/10">
+                  <Sparkles className="text-white" size={24} />
+                </div>
+                
+                <div className="flex-1 w-full space-y-3">
+                  <div>
+                    <h3 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>AI Event Magic</h3>
+                    <p className={`text-sm font-bold mt-1 ${darkMode ? 'text-indigo-200/70' : 'text-slate-500'}`}>
+                      Enter a few keywords and let Gemini write a catchy title and description for you.
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input 
+                      type="text" 
+                      value={aiKeywords}
+                      onChange={(e) => setAiKeywords(e.target.value)}
+                      placeholder="e.g., rock concert, Friday night, local bands..."
+                      className={`flex-1 border rounded-xl px-4 py-3 outline-none transition-all font-bold text-sm ${darkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-indigo-400 focus:bg-white/10' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-400'}`}
+                    />
+                    <button 
+                      type="button" // important: keeps it from submitting the main form!
+                      onClick={handleMagicGenerate}
+                      disabled={isGenerating || !aiKeywords.trim()}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-indigo-600/20"
+                    >
+                      {isGenerating ? (
+                        <span className="animate-pulse">Thinking...</span>
+                      ) : (
+                        <>Generate <Wand2 size={16} /></>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+
           <form onSubmit={handlePublish} className="space-y-8 sm:space-y-16">
 
             {/* Cover image */}
@@ -273,6 +348,7 @@ export default function CreateEvent() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0F0121]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <button
+                          type="button"
                           onClick={removeImage}
                           className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-rose-500 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl ripple-btn opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
