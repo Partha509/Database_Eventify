@@ -46,20 +46,23 @@ export default function Home() {
 
     // Decrement timeRemaining every second
     useEffect(() => {
-        if (sessionInfo && sessionInfo.timeRemaining <= 0) return;
+        // Check if sessionInfo exists and has time left
+        if (!sessionInfo || sessionInfo.timeRemaining <= 0) return;
 
         const timer = setInterval(() => {
             setSessionInfo((p) => {
-                if (!p) return null;
+                if (!p || p.timeRemaining <= 0) {
+                    clearInterval(timer);
+                    return p;
+                }
                 return {
                     ...p,
                     timeRemaining: p.timeRemaining - 1,
                 };
             });
         }, 1000);
-
         return () => clearInterval(timer);
-    }, [sessionInfo?.timeRemaining]);
+    }, [sessionInfo]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

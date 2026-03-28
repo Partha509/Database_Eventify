@@ -1,4 +1,4 @@
-name: Node.js CI Pipeline
+name: Eventify CI Pipeline
 
 on:
   push:
@@ -7,22 +7,60 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  build-and-test:
+  frontend:
+    name: Build & Lint Frontend
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.14.0'
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: './client/package-lock.json'
 
-      - name: Install Server Dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Lint Code
+        run: npm run lint
+
+      - name: Build Application
+        run: npm run build
+
+  backend:
+    name: Install & Verify Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
         working-directory: ./server
-        run: npm install
 
-      - name: Install Client Dependencies
-        working-directory: ./client
-        run: npm install
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1' 
+          tools: composer:v2
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-php-${{ hashFiles('server/composer.json') }}
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
