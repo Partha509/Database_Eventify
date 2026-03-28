@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import React, { createContext, useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/Authcontext';
+import { AuthProvider } from './context/AuthContext';
 import EventsPage from './pages/Eventspage';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
