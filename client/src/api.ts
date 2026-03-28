@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosInstance } from 'axios';
 import { secrets } from "./secrets";
 import toast from "react-hot-toast";
 
@@ -158,37 +158,78 @@ class ApiClient {
     }
   }
 
-  // --------- ERROR HANDLING ---------
+  // --------- SESSIONS & ATTENDANCE ---------
 
-  private handleError(error: any) {
-
-  if (error.response) {
-
-    const message =
-      error.response.data?.message ||
-      error.response.data?.error ||
-      "Server error";
-
-    console.error("API Error:", message);
-
-    toast.error(message);
-
-  }
-  else if (error.request) {
-
-    console.error("No response from server", error.request);
-
-    toast.error("Server not responding. Check Laravel server.");
-
-  }
-  else {
-
-    console.error("Request Error:", error.message);
-
-    toast.error(error.message);
+  async createSession(sessionName: string, duration: number, username?: string, password?: string) {
+    try {
+      const response = await this.client.post("/api/sessions", { sessionName, duration, username, password });
+      toast.success("Session created successfully");
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
- }
+  async getSession() {
+    try {
+      const response = await this.client.get("/api/sessions/current");
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async viewSessions(username?: string, password?: string) {
+    try {
+      const response = await this.client.post("/api/sessions/view", { username, password });
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async updateSession(sessionId: number, isActive: boolean, username?: string, password?: string) {
+    try {
+      const response = await this.client.put(`/api/sessions/${sessionId}`, { isActive, username, password });
+      toast.success("Session updated successfully");
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async submitAttendance(roll: number) {
+    try {
+      const response = await this.client.post("/api/attendance", { roll });
+      toast.success("Attendance submitted");
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+  
+ // --------- ERROR HANDLING ---------
+
+  private handleError(error: unknown) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        const data = error.response.data as { message?: string; error?: string };
+        const message = data.message || data.error || "Server error";
+
+        console.error("API Error:", message);
+        toast.error(message);
+      } else if (error.request) {
+        console.error("No response from server", error.request);
+        toast.error("Server not responding. Check Laravel server.");
+      }
+    } else if (error instanceof Error) {
+      console.error("Request Error:", error.message);
+      toast.error(error.message);
+    } else {
+      console.error("Unknown Error:", error);
+      toast.error("An unexpected error occurred.");
+    }
+  }
 
  // --------- AI CHATBOT ---------
   
