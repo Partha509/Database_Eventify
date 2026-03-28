@@ -669,64 +669,6 @@ function NotificationPanel({ darkMode, showNotif, setShowNotif }) {
       <span className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-500 text-white text-[11px] font-black flex items-center justify-center rounded-full border-[3px] border-white shadow-lg">
         3
       </span>
-
-      {showNotif && (
-        <div
-          className={`
-            absolute top-20 right-0 w-[calc(100vw-2rem)] sm:w-[450px] z-[100] border
-            rounded-[32px] sm:rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
-            animate-in fade-in zoom-in-95 duration-300
-            ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
-          `}
-        >
-          <div className="p-6 sm:p-10">
-            <button
-              onClick={() => setShowNotif(false)}
-              className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-5 font-black text-xs uppercase tracking-widest"
-            >
-              <ChevronLeft size={16} /> Back
-            </button>
-            <div className="flex justify-between items-end mb-6 sm:mb-10">
-              <div>
-                <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-                  Notifications
-                </h2>
-                <p className="text-slate-500 font-bold mt-1">Stay updated</p>
-              </div>
-              <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
-                Mark all read
-              </button>
-            </div>
-            <div className="space-y-3 sm:space-y-5 max-h-[60vh] overflow-y-auto no-scrollbar pr-1 sm:pr-2">
-              {NOTIFICATIONS.map((n) => (
-                <div
-                  key={n.id}
-                  className={`
-                    p-4 sm:p-7 rounded-[24px] sm:rounded-[32px] border flex gap-4 sm:gap-6
-                    transition-all cursor-pointer hover:translate-x-2
-                    ${darkMode
-                      ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
-                      : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
-                    }
-                  `}
-                >
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[22px] flex items-center justify-center text-white shrink-0 shadow-2xl ${n.color}`}>
-                    {n.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
-                      {n.unread && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full mt-1 shrink-0 ml-2" />}
-                    </div>
-                    <p className="text-slate-500 text-xs font-bold mt-1 leading-relaxed">{n.desc}</p>
-                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 block">{n.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1527,8 +1469,8 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
       {isChatOpen && (
         <div
           className={`
-            w-[calc(100vw-2rem)] sm:w-[420px] h-[520px] sm:h-[680px]
-            mb-4 sm:mb-8 rounded-[2.5rem] sm:rounded-[3.5rem]
+            w-[calc(100vw-2rem)] sm:w-[360px] h-[440px] sm:h-[520px]
+            mb-3 sm:mb-4 rounded-[1.5rem] sm:rounded-[2rem]
             shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]
             overflow-hidden flex flex-col transition-all duration-500
             animate-in slide-in-from-left-12 border backdrop-blur-3xl
@@ -1536,10 +1478,10 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
           `}
         >
           {/* header area */}
-          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-6 sm:p-10 flex items-center justify-between shadow-xl shrink-0">
+          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-4 sm:p-5 flex items-center justify-between shadow-xl shrink-0">
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="relative">
-                <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 rounded-2xl backdrop-blur-xl flex items-center justify-center border border-white/30 shadow-inner">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-xl backdrop-blur-xl flex items-center justify-center border border-white/30 shadow-inner">
                   <Sparkles className="text-white" size={22} />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 rounded-full border-[3px] sm:border-[4px] border-indigo-700 shadow-lg animate-pulse" />
@@ -1588,10 +1530,10 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
           </div>
 
           {/* input box area */}
-          <div className={`p-5 sm:p-8 border-t shrink-0 ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
+          <div className={`p-3 sm:p-4 border-t shrink-0 ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
             <div
               className={`
-                flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border transition-all
+                flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border transition-all
                 ${darkMode
                   ? "bg-[#1E0B3B] border-white/10 focus-within:border-indigo-500"
                   : "bg-white border-slate-200 focus-within:border-indigo-400"
@@ -1609,9 +1551,9 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
               <button
                 onClick={handleSend}
                 disabled={isLoading || !input.trim()}
-                className="w-11 h-11 sm:w-14 sm:h-14 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[0.8rem] sm:rounded-[1rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
               >
-                <Send size={18} />
+                <Send size={14} />
               </button>
             </div>
           </div>
@@ -1621,9 +1563,9 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
       {/* floating toggle button */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center text-white shadow-[0_25px_60px_-15px_rgba(79,70,229,0.5)] hover:scale-110 active:scale-90 transition-all ripple-btn border-2 sm:border-4 border-white/10"
+        className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[1rem] sm:rounded-[1.25rem] flex items-center justify-center text-white shadow-[0_25px_60px_-15px_rgba(79,70,229,0.5)] hover:scale-110 active:scale-90 transition-all ripple-btn border-2 border-white/10"
       >
-        {isChatOpen ? <X size={26} strokeWidth={2.5} /> : <MessageCircle size={26} strokeWidth={2.5} />}
+        {isChatOpen ? <X size={18} strokeWidth={2.5} /> : <MessageCircle size={18} strokeWidth={2.5} />}
       </button>
     </div>
   );
@@ -1809,6 +1751,67 @@ export default function Eventpage() {
                     className={`p-4 rounded-[20px] border flex gap-4 ${darkMode ? "bg-[#0F0121] border-white/5" : "bg-slate-50 border-slate-100"}`}
                   >
                     <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
+                      {React.cloneElement(n.icon, { size: 16 })}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
+                        {n.unread && <div className="w-2 h-2 bg-indigo-600 rounded-full shrink-0 mt-1 ml-2" />}
+                      </div>
+                      <p className="text-slate-500 text-xs font-bold mt-0.5 leading-relaxed">{n.desc}</p>
+                      <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1 block">{n.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop/Tablet notification panel (floating, attached to bell icon) */}
+      {showNotif && (
+        <div className="hidden md:block fixed top-24 right-6 lg:right-12 z-[500]">
+          <div
+            className={`
+        w-[360px] border
+        rounded-[28px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
+        animate-in fade-in zoom-in-95 duration-300
+        ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
+      `}
+          >
+            <div className="p-5">
+              <button
+                onClick={() => setShowNotif(false)}
+                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-black text-xs uppercase tracking-widest"
+              >
+                <ChevronLeft size={16} /> Back
+              </button>
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <h2 className={`text-xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+                    Notifications
+                  </h2>
+                  <p className="text-slate-500 font-bold mt-0.5 text-sm">Stay updated</p>
+                </div>
+                <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
+                  Mark all read
+                </button>
+              </div>
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar pr-1">
+                {NOTIFICATIONS.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`
+                p-3 rounded-[18px] border flex gap-3
+                transition-all cursor-pointer hover:translate-x-1
+                ${darkMode
+                        ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
+                        : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
+                      }
+              `}
+                  >
+                    <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
                       {React.cloneElement(n.icon, { size: 16 })}
                     </div>
                     <div className="flex-1 min-w-0">
