@@ -6,10 +6,10 @@ import {
   UploadCloud, CalendarDays, Clock3,
   LayoutDashboard, Calendar, PlusSquare, TrendingUp,
   MapPin, DollarSign, Type, AlignLeft, PartyPopper, X,
-  Bell, User, Sparkles, Wand2, // added icons for the AI widget
+  Bell, User, Sparkles, Wand2,
 } from "lucide-react";
-import { AnimationStyles, FadeIn, SlideIn } from "../components/ui";
-import ApiClient from "../api"; // bringing in our api client for gemini
+import { AnimationStyles, FadeIn, SlideIn, usePageLoad, SkeletonCreateEvent } from "../components/ui";
+import ApiClient from "../api";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -121,6 +121,9 @@ export default function CreateEvent() {
   const { user } = useContext(AuthContext);
   const fileInputRef = useRef(null);
 
+  // ── NOW ACTIVE: 500ms skeleton before content renders ──
+  const loaded = usePageLoad(500);
+
   const [formData, setFormData] = useState({
     title: "", category: "", date: "",
     time: "", location: "", price: "", description: "",
@@ -128,7 +131,6 @@ export default function CreateEvent() {
   const [coverImage, setCoverImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // states for the ai content generator
   const [aiKeywords, setAiKeywords] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -166,17 +168,13 @@ export default function CreateEvent() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // call our laravel endpoint to get title and description from gemini
   const handleMagicGenerate = async () => {
     if (!aiKeywords.trim()) return;
     setIsGenerating(true);
-    
     try {
       const api = new ApiClient();
       const generatedData = await api.generateEvent(aiKeywords);
-      
       if (generatedData) {
-        // update the form inputs with what gemini returned
         setFormData((prev) => ({
           ...prev,
           title: generatedData.title || prev.title,
@@ -242,7 +240,7 @@ export default function CreateEvent() {
 
       <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-5 sm:py-8 lg:py-10 relative overflow-y-auto pb-28 md:pb-10">
 
-        {/* Header */}
+        {/* Header — always visible */}
         <FadeIn delay={0}>
           <header className="flex items-center justify-between mb-8 sm:mb-12 gap-4">
             <div>
@@ -270,197 +268,198 @@ export default function CreateEvent() {
           </header>
         </FadeIn>
 
-        {/* Form */}
+        {/* Form area — skeleton or real content */}
         <div className="max-w-[1100px] mx-auto pb-10 sm:pb-32">
-          
-          {/* AI Generator Box - sits above the form so organizers see it first */}
-          <FadeIn delay={40}>
-            <div className={`mb-8 sm:mb-10 rounded-[32px] p-6 sm:p-8 shadow-2xl relative overflow-hidden border ${darkMode ? 'bg-gradient-to-br from-indigo-900 via-[#1E0B3B] to-[#0F0121] border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 via-white to-indigo-50/50 border-indigo-100'}`}>
-              
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
-
-              <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30 shrink-0 border border-white/10">
-                  <Sparkles className="text-white" size={24} />
-                </div>
-                
-                <div className="flex-1 w-full space-y-3">
-                  <div>
-                    <h3 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>AI Event Magic</h3>
-                    <p className={`text-sm font-bold mt-1 ${darkMode ? 'text-indigo-200/70' : 'text-slate-500'}`}>
-                      Enter a few keywords and let Gemini write a catchy title and description for you.
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input 
-                      type="text" 
-                      value={aiKeywords}
-                      onChange={(e) => setAiKeywords(e.target.value)}
-                      placeholder="e.g., rock concert, Friday night, local bands..."
-                      className={`flex-1 border rounded-xl px-4 py-3 outline-none transition-all font-bold text-sm ${darkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-indigo-400 focus:bg-white/10' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-400'}`}
-                    />
-                    <button 
-                      type="button" // important: keeps it from submitting the main form!
-                      onClick={handleMagicGenerate}
-                      disabled={isGenerating || !aiKeywords.trim()}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-indigo-600/20"
-                    >
-                      {isGenerating ? (
-                        <span className="animate-pulse">Thinking...</span>
-                      ) : (
-                        <>Generate <Wand2 size={16} /></>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
-
-          <form onSubmit={handlePublish} className="space-y-8 sm:space-y-16">
-
-            {/* Cover image */}
-            <FadeIn delay={80}>
-              <div className={`p-5 sm:p-10 rounded-[32px] sm:rounded-[48px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
-                <InputWrapper label="Cover Image" icon={<PartyPopper />} required>
-                  <div
-                    onClick={() => fileInputRef.current.click()}
-                    className={`
-                      relative group h-[200px] sm:h-[300px] lg:h-[400px]
-                      rounded-[24px] sm:rounded-[36px] border-4 border-dashed
-                      transition-all cursor-pointer flex flex-col items-center
-                      justify-center text-center p-6 sm:p-10 overflow-hidden
-                      ${imagePreview
-                        ? "border-indigo-500 shadow-xl shadow-indigo-500/10"
-                        : darkMode
-                          ? "border-white/10 hover:border-indigo-500 bg-[#0F0121]"
-                          : "border-slate-100 hover:border-indigo-400 bg-slate-50"
-                      }
-                    `}
-                  >
-                    {imagePreview ? (
-                      <>
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+          {!loaded ? (
+            <SkeletonCreateEvent darkMode={darkMode} />
+          ) : (
+            <>
+              {/* AI Generator Box */}
+              <FadeIn delay={40}>
+                <div className={`mb-8 sm:mb-10 rounded-[32px] p-6 sm:p-8 shadow-2xl relative overflow-hidden border ${darkMode ? 'bg-gradient-to-br from-indigo-900 via-[#1E0B3B] to-[#0F0121] border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 via-white to-indigo-50/50 border-indigo-100'}`}>
+                  <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+                  <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                    <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30 shrink-0 border border-white/10">
+                      <Sparkles className="text-white" size={24} />
+                    </div>
+                    <div className="flex-1 w-full space-y-3">
+                      <div>
+                        <h3 className={`text-xl font-black ${darkMode ? 'text-white' : 'text-slate-900'}`}>AI Event Magic</h3>
+                        <p className={`text-sm font-bold mt-1 ${darkMode ? 'text-indigo-200/70' : 'text-slate-500'}`}>
+                          Enter a few keywords and let Gemini write a catchy title and description for you.
+                        </p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          value={aiKeywords}
+                          onChange={(e) => setAiKeywords(e.target.value)}
+                          placeholder="e.g., rock concert, Friday night, local bands..."
+                          className={`flex-1 border rounded-xl px-4 py-3 outline-none transition-all font-bold text-sm ${darkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-indigo-400 focus:bg-white/10' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-400'}`}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F0121]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <button
                           type="button"
-                          onClick={removeImage}
-                          className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-rose-500 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl ripple-btn opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          onClick={handleMagicGenerate}
+                          disabled={isGenerating || !aiKeywords.trim()}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-indigo-600/20"
                         >
-                          <X size={18} strokeWidth={3} />
+                          {isGenerating ? (
+                            <span className="animate-pulse">Thinking...</span>
+                          ) : (
+                            <>Generate <Wand2 size={16} /></>
+                          )}
                         </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-5 sm:mb-8 shadow-2xl transition-colors ${darkMode ? "bg-[#1E0B3B]" : "bg-white"}`}>
-                          <UploadCloud size={32} className="text-indigo-500 sm:hidden" strokeWidth={1.5} />
-                          <UploadCloud size={44} className="text-indigo-500 hidden sm:block" strokeWidth={1.5} />
-                        </div>
-                        <h4 className="text-lg sm:text-2xl font-black tracking-tight mb-2">Upload cover image</h4>
-                        <p className="text-sm font-bold text-slate-500">PNG, JPG up to 10MB</p>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageChange}
-                      accept="image/png, image/jpeg"
-                      className="hidden"
-                    />
-                  </div>
-                </InputWrapper>
-              </div>
-            </FadeIn>
-
-            {/* Core details */}
-            <FadeIn delay={160}>
-              <div className={`p-5 sm:p-12 rounded-[32px] sm:rounded-[56px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
-                <h3 className="text-xl sm:text-3xl font-black mb-8 sm:mb-12 tracking-tight flex items-center gap-3 sm:gap-4">
-                  <AlignLeft size={20} className="text-indigo-500" /> Core Details
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
-
-                  {/* Title */}
-                  <div className="sm:col-span-2">
-                    <InputWrapper label="Event Title" icon={<Type />} required>
-                      <input type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="Enter a catchy event name" className={inputClasses} required />
-                    </InputWrapper>
-                  </div>
-
-                  {/* Category */}
-                  <InputWrapper label="Category" icon={<PartyPopper />} required>
-                    <select name="category" value={formData.category} onChange={handleInputChange} className={`${inputClasses} appearance-none`} required>
-                      <option value="" disabled>Select category</option>
-                      {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-                    </select>
-                  </InputWrapper>
-
-                  {/* Location */}
-                  <InputWrapper label="Location" icon={<MapPin />} required>
-                    <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="Event address" className={inputClasses} required />
-                  </InputWrapper>
-
-                  {/* Date */}
-                  <InputWrapper label="Date" icon={<CalendarDays />} required>
-                    <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={inputClasses} required />
-                  </InputWrapper>
-
-                  {/* Time */}
-                  <InputWrapper label="Time" icon={<Clock3 />}>
-                    <input type="time" name="time" value={formData.time} onChange={handleInputChange} className={inputClasses} />
-                  </InputWrapper>
-
-                  {/* Price */}
-                  <InputWrapper label="Ticket Price (USD)" icon={<DollarSign />}>
-                    <input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00" min="0" step="0.01" className={inputClasses} />
-                  </InputWrapper>
-
-                  {/* Description */}
-                  <div className="sm:col-span-2">
-                    <InputWrapper label="Event Description" required>
-                      <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="Describe your experience..."
-                        rows={5}
-                        className={`${inputClasses} py-4 sm:py-6 resize-none no-scrollbar`}
-                        required
-                      />
-                    </InputWrapper>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </FadeIn>
 
-                {/* Actions */}
-                <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 mt-10 sm:mt-16 pt-8 sm:pt-10 border-t ${darkMode ? "border-white/5" : "border-slate-100"}`}>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/")}
-                    className={`
-                      flex-1 text-center py-4 sm:py-6 rounded-[22px] sm:rounded-[28px]
-                      font-black text-base sm:text-lg transition-all ripple-btn
-                      ${darkMode ? "bg-white/5 text-white hover:bg-white/10" : "bg-slate-50 text-slate-600 border border-slate-100"}
-                    `}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 text-center py-4 sm:py-6 rounded-[22px] sm:rounded-[28px] bg-indigo-600 text-white font-black text-base sm:text-lg shadow-2xl shadow-indigo-600/20 ripple-btn hover:bg-indigo-700 transition-all"
-                  >
-                    Publish Event
-                  </button>
-                </div>
-              </div>
-            </FadeIn>
+              <form onSubmit={handlePublish} className="space-y-8 sm:space-y-16">
 
-          </form>
+                {/* Cover image */}
+                <FadeIn delay={80}>
+                  <div className={`p-5 sm:p-10 rounded-[32px] sm:rounded-[48px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
+                    <InputWrapper label="Cover Image" icon={<PartyPopper />} required>
+                      <div
+                        onClick={() => fileInputRef.current.click()}
+                        className={`
+                          relative group h-[200px] sm:h-[300px] lg:h-[400px]
+                          rounded-[24px] sm:rounded-[36px] border-4 border-dashed
+                          transition-all cursor-pointer flex flex-col items-center
+                          justify-center text-center p-6 sm:p-10 overflow-hidden
+                          ${imagePreview
+                            ? "border-indigo-500 shadow-xl shadow-indigo-500/10"
+                            : darkMode
+                              ? "border-white/10 hover:border-indigo-500 bg-[#0F0121]"
+                              : "border-slate-100 hover:border-indigo-400 bg-slate-50"
+                          }
+                        `}
+                      >
+                        {imagePreview ? (
+                          <>
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0121]/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                              type="button"
+                              onClick={removeImage}
+                              className="absolute top-4 sm:top-6 right-4 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 bg-rose-500 text-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl ripple-btn opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            >
+                              <X size={18} strokeWidth={3} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className={`w-16 h-16 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-5 sm:mb-8 shadow-2xl transition-colors ${darkMode ? "bg-[#1E0B3B]" : "bg-white"}`}>
+                              <UploadCloud size={32} className="text-indigo-500 sm:hidden" strokeWidth={1.5} />
+                              <UploadCloud size={44} className="text-indigo-500 hidden sm:block" strokeWidth={1.5} />
+                            </div>
+                            <h4 className="text-lg sm:text-2xl font-black tracking-tight mb-2">Upload cover image</h4>
+                            <p className="text-sm font-bold text-slate-500">PNG, JPG up to 10MB</p>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageChange}
+                          accept="image/png, image/jpeg"
+                          className="hidden"
+                        />
+                      </div>
+                    </InputWrapper>
+                  </div>
+                </FadeIn>
+
+                {/* Core details */}
+                <FadeIn delay={160}>
+                  <div className={`p-5 sm:p-12 rounded-[32px] sm:rounded-[56px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
+                    <h3 className="text-xl sm:text-3xl font-black mb-8 sm:mb-12 tracking-tight flex items-center gap-3 sm:gap-4">
+                      <AlignLeft size={20} className="text-indigo-500" /> Core Details
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
+
+                      {/* Title */}
+                      <div className="sm:col-span-2">
+                        <InputWrapper label="Event Title" icon={<Type />} required>
+                          <input type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="Enter a catchy event name" className={inputClasses} required />
+                        </InputWrapper>
+                      </div>
+
+                      {/* Category */}
+                      <InputWrapper label="Category" icon={<PartyPopper />} required>
+                        <select name="category" value={formData.category} onChange={handleInputChange} className={`${inputClasses} appearance-none`} required>
+                          <option value="" disabled>Select category</option>
+                          {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                        </select>
+                      </InputWrapper>
+
+                      {/* Location */}
+                      <InputWrapper label="Location" icon={<MapPin />} required>
+                        <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="Event address" className={inputClasses} required />
+                      </InputWrapper>
+
+                      {/* Date */}
+                      <InputWrapper label="Date" icon={<CalendarDays />} required>
+                        <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={inputClasses} required />
+                      </InputWrapper>
+
+                      {/* Time */}
+                      <InputWrapper label="Time" icon={<Clock3 />}>
+                        <input type="time" name="time" value={formData.time} onChange={handleInputChange} className={inputClasses} />
+                      </InputWrapper>
+
+                      {/* Price */}
+                      <InputWrapper label="Ticket Price (USD)" icon={<DollarSign />}>
+                        <input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00" min="0" step="0.01" className={inputClasses} />
+                      </InputWrapper>
+
+                      {/* Description */}
+                      <div className="sm:col-span-2">
+                        <InputWrapper label="Event Description" required>
+                          <textarea
+                            name="description"
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            placeholder="Describe your experience..."
+                            rows={5}
+                            className={`${inputClasses} py-4 sm:py-6 resize-none no-scrollbar`}
+                            required
+                          />
+                        </InputWrapper>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 mt-10 sm:mt-16 pt-8 sm:pt-10 border-t ${darkMode ? "border-white/5" : "border-slate-100"}`}>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className={`
+                          flex-1 text-center py-4 sm:py-6 rounded-[22px] sm:rounded-[28px]
+                          font-black text-base sm:text-lg transition-all ripple-btn
+                          ${darkMode ? "bg-white/5 text-white hover:bg-white/10" : "bg-slate-50 text-slate-600 border border-slate-100"}
+                        `}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 text-center py-4 sm:py-6 rounded-[22px] sm:rounded-[28px] bg-indigo-600 text-white font-black text-base sm:text-lg shadow-2xl shadow-indigo-600/20 ripple-btn hover:bg-indigo-700 transition-all"
+                      >
+                        Publish Event
+                      </button>
+                    </div>
+                  </div>
+                </FadeIn>
+
+              </form>
+            </>
+          )}
         </div>
       </main>
 

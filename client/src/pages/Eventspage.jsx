@@ -223,6 +223,37 @@ const getGlobalStyles = (priceRange, darkMode) => `
     to   { opacity: 1; transform: translateY(0)    scale(1);    }
   }
 
+  /* ── Hero section animations ── */
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+  @keyframes heroBtnPop {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+  @keyframes heroGlowPulse {
+    0%, 100% { opacity: 0.15; transform: scale(1);    }
+    50%      { opacity: 0.3;  transform: scale(1.08); }
+  }
+  @keyframes heroBtnClick {
+    0%   { transform: scale(1);    }
+    40%  { transform: scale(0.93); }
+    100% { transform: scale(1);    }
+  }
+  .hero-fade-up {
+    animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-btn-pop {
+    animation: heroBtnPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .hero-glow {
+    animation: heroGlowPulse 4s ease-in-out infinite;
+  }
+  .hero-btn-click {
+    animation: heroBtnClick 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
   /* ── Mobile bottom nav safe area ── */
   @supports (padding-bottom: env(safe-area-inset-bottom)) {
     .bottom-nav {
@@ -770,6 +801,149 @@ function TopBar({
   );
 }
 
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+
+function HeroSection({ darkMode, navigate, setIsSearchActive }) {
+  const [exploreClicked, setExploreClicked] = useState(false);
+  const [createClicked, setCreateClicked] = useState(false);
+
+  const handleExplore = () => {
+    setExploreClicked(true);
+    setTimeout(() => {
+      setExploreClicked(false);
+      setIsSearchActive(true);
+      // smooth scroll to search results area
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 350);
+  };
+
+  const handleCreate = () => {
+    setCreateClicked(true);
+    setTimeout(() => {
+      navigate("/create-event");
+    }, 350);
+  };
+
+  return (
+    <section className="mb-10 sm:mb-16 max-w-full">
+      <div
+        className={`
+          relative rounded-[32px] sm:rounded-[48px] overflow-hidden
+          px-6 sm:px-16 py-10 sm:py-14 text-center
+          flex flex-col items-center justify-center
+          ${darkMode
+            ? "bg-[#1E0B3B] border border-white/5"
+            : "bg-white border border-slate-100 shadow-sm"
+          }
+        `}
+      >
+        {/* ── Ambient glow blobs ── */}
+        <div
+          className="hero-glow absolute -top-24 -left-24 w-96 h-96 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)" }}
+        />
+        <div
+          className="hero-glow absolute -bottom-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)",
+            animationDelay: "2s",
+          }}
+        />
+        <div
+          className="hero-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse, rgba(236,72,153,0.1) 0%, transparent 70%)",
+            animationDelay: "1s",
+          }}
+        />
+
+        {/* ── Headline ── */}
+        <h1
+          className="hero-fade-up relative z-10 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-4 sm:mb-5"
+          style={{
+            animationDelay: "0ms",
+            backgroundImage: "linear-gradient(135deg, #818cf8 0%, #a78bfa 35%, #f472b6 65%, #fb7185 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Create. Connect.<br />Celebrate.
+        </h1>
+
+        {/* ── Subtitle ── */}
+        <p
+          className={`
+            hero-fade-up relative z-10
+            text-sm sm:text-base lg:text-lg font-bold leading-relaxed
+            max-w-xl sm:max-w-2xl mb-6 sm:mb-8
+            ${darkMode ? "text-slate-400" : "text-slate-500"}
+          `}
+          style={{ animationDelay: "120ms" }}
+        >
+          Discover amazing events or create your own unforgettable experiences
+          with Eventify, the ultimate event management platform.
+        </p>
+
+        {/* ── CTA Buttons ── */}
+        <div
+          className="hero-btn-pop relative z-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-5"
+          style={{ animationDelay: "220ms" }}
+        >
+          {/* Explore Events */}
+          <button
+            onClick={handleExplore}
+            className={`
+              group flex items-center gap-3
+              px-7 sm:px-10 py-4 sm:py-5
+              rounded-[18px] sm:rounded-[22px]
+              font-black text-sm sm:text-base text-white
+              bg-indigo-600 hover:bg-indigo-700
+              shadow-2xl shadow-indigo-600/40
+              transition-all duration-300
+              hover:-translate-y-1 hover:shadow-indigo-600/50
+              active:scale-95
+              w-full sm:w-auto
+              ${exploreClicked ? "hero-btn-click" : ""}
+            `}
+          >
+            Explore Events
+            <ArrowRight
+              size={18}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            />
+          </button>
+
+          {/* Create Event */}
+          <button
+            onClick={handleCreate}
+            className={`
+              flex items-center gap-3
+              px-7 sm:px-10 py-4 sm:py-5
+              rounded-[18px] sm:rounded-[22px]
+              font-black text-sm sm:text-base
+              border-2 transition-all duration-300
+              hover:-translate-y-1
+              active:scale-95
+              w-full sm:w-auto
+              ${createClicked ? "hero-btn-click" : ""}
+              ${darkMode
+                ? "border-white/15 text-white hover:border-indigo-400/60 hover:bg-white/5"
+                : "border-slate-200 text-slate-800 hover:border-indigo-300 hover:bg-indigo-50/50"
+              }
+            `}
+          >
+            <PlusSquare size={18} className="text-indigo-500" />
+            Create Event
+          </button>
+        </div>
+
+
+      </div>
+    </section>
+  );
+}
+
 // ─── Featured Carousel ────────────────────────────────────────────────────────
 
 function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
@@ -987,6 +1161,104 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
         <div className="sm:hidden absolute bottom-16 right-5 z-10 flex items-center gap-1 text-white/60 text-[10px] font-bold">
           <ChevronLeft size={12} /> swipe <ChevronRight size={12} />
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── How It Works ─────────────────────────────────────────────────────────────
+
+const HOW_IT_WORKS = [
+  {
+    step: "Step 1",
+    title: "Discover Events",
+    desc: "Browse through thousands of events or use our smart filters to find exactly what you're looking for.",
+    emoji: "🔍",
+    color: "from-indigo-500/20 to-violet-500/10",
+    border: "border-indigo-500/20",
+    stepColor: "text-indigo-400",
+  },
+  {
+    step: "Step 2",
+    title: "Book Your Spot",
+    desc: "Secure your tickets instantly with our simple and safe booking process. Get instant confirmation.",
+    emoji: "🎟️",
+    color: "from-amber-500/15 to-orange-500/10",
+    border: "border-amber-500/20",
+    stepColor: "text-amber-400",
+  },
+  {
+    step: "Step 3",
+    title: "Celebrate Together",
+    desc: "Show up and enjoy! Connect with like-minded people and create unforgettable memories.",
+    emoji: "🎉",
+    color: "from-rose-500/15 to-pink-500/10",
+    border: "border-rose-500/20",
+    stepColor: "text-rose-400",
+  },
+];
+
+function HowItWorks({ darkMode, isSearchActive }) {
+  if (isSearchActive) return null;
+
+  return (
+    <section className="mb-10 sm:mb-16 max-w-full">
+      {/* Section heading */}
+      <div className="text-center mb-8 sm:mb-12">
+        <h2
+          className={`text-2xl sm:text-4xl font-black tracking-tight mb-2 sm:mb-3 ${darkMode ? "text-white" : "text-slate-900"}`}
+        >
+          How It Works
+        </h2>
+        <p className={`text-sm sm:text-base font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+          Getting started is simple and quick
+        </p>
+      </div>
+
+      {/* Cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {HOW_IT_WORKS.map((item, i) => (
+          <div
+            key={item.step}
+            className={`
+              relative rounded-[28px] sm:rounded-[36px] p-6 sm:p-8
+              border backdrop-blur-sm
+              transition-all duration-500 hover:-translate-y-2
+              bg-gradient-to-br ${item.color} ${item.border}
+              ${darkMode ? "bg-[#1E0B3B]/80" : "bg-white/80 shadow-sm"}
+            `}
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            {/* Emoji icon */}
+            <div className="text-5xl sm:text-6xl mb-5 sm:mb-6 select-none">
+              {item.emoji}
+            </div>
+
+            {/* Divider line matching screenshot */}
+            <div
+              className={`
+                absolute right-6 sm:right-8 top-1/2 -translate-y-1/2
+                hidden sm:block w-px h-10
+                ${i < HOW_IT_WORKS.length - 1 ? "bg-indigo-500/30" : "hidden"}
+              `}
+            />
+
+            {/* Step label */}
+            <p className={`text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] mb-2 ${item.stepColor}`}>
+              {item.step}
+            </p>
+
+            {/* Title */}
+            <h3 className={`text-lg sm:text-xl font-black mb-3 sm:mb-4 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+              {item.title}
+            </h3>
+
+            {/* Description */}
+            <p className={`text-sm font-bold leading-relaxed ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              {item.desc}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -1461,9 +1733,26 @@ export default function Eventpage() {
           </div>
         ) : (
           <>
+            {/* ── Hero Section — shown above Featured Events ── */}
+            {!isSearchActive && (
+              <FadeIn delay={40}>
+                <HeroSection
+                  darkMode={darkMode}
+                  navigate={navigate}
+                  setIsSearchActive={setIsSearchActive}
+                />
+              </FadeIn>
+            )}
+
             <FadeIn delay={80}>
               <FeaturedEvents
                 darkMode={darkMode} navigate={navigate}
+                isSearchActive={isSearchActive}
+              />
+            </FadeIn>
+            <FadeIn delay={120}>
+              <HowItWorks
+                darkMode={darkMode}
                 isSearchActive={isSearchActive}
               />
             </FadeIn>
