@@ -10,6 +10,8 @@ class Event extends Model
     use HasFactory;
 
     protected $primaryKey = 'event_id';
+    
+    public $timestamps = false;
 
     protected $fillable = [
         'event_name',
@@ -20,7 +22,7 @@ class Event extends Model
         'user_id'
     ];
 
-     public function venue()
+    public function venue()
     {
         return $this->belongsTo(Venue::class,'venue_id');
     }
