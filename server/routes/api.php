@@ -86,3 +86,8 @@ Route::middleware('auth:api')->get('/profile', [AuthController::class, 'profile'
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+// --- Bkash ---
+Route::middleware('auth:api')->post('/bkash/create', [PaymentController::class, 'createBkashPayment']);
+Route::get('/bkash/callback', [PaymentController::class, 'bkashCallback'])->name('bkash.callback');

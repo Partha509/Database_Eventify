@@ -24,7 +24,8 @@ services:
       - database
 
   server:
-    build: ./server
+    build:
+      context: ./server
     ports:
       - "8000:8000"
     depends_on:
@@ -40,16 +41,25 @@ services:
       DB_DATABASE: event_management
       DB_USERNAME: user
       DB_PASSWORD: password
+      APP_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:3000
 
   client:
-    build: ./client
+    build:
+      context: ./client
     ports:
       - "3000:5173"
+    stdin_open: true
+    tty: true
     depends_on:
       - server
     volumes:
       - ./client:/app
       - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000/api
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
 
 volumes:
   mysql_data:

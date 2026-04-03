@@ -1,26 +1,15 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    */
-
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'bkash/*'],
 
     'allowed_methods' => ['*'],
 
-    // This dynamically allows whatever is in the .env file, plus standard local ports
     'allowed_origins' => [
-        env('FRONTEND_URL', 'http://localhost:5173'),
+        env('FRONTEND_URL', 'http://localhost:3000'),
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'http://localhost:5173',
         'http://127.0.0.1:5173'
     ],
 
@@ -33,5 +22,4 @@ return [
     'max_age' => 0,
 
     'supports_credentials' => true,
-
 ];

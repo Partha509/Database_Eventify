@@ -9,6 +9,8 @@ class Payment extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $primaryKey = 'payment_id';
 
     protected $fillable = [
