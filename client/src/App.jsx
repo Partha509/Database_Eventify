@@ -42,8 +42,8 @@ const ThemeProvider = ({ children }) => {
 // 3. LAYOUT COMPONENT TO KEEP SIDEBAR PERSISTENT
 const AppLayout = ({ children }) => {
   const location = useLocation();
-  // Exclude sidebar from login and register pages
-  const noSidebarRoutes = ['/login', '/register'];
+  // Exclude sidebar from login, register, and auth callback pages
+  const noSidebarRoutes = ['/login', '/register', '/auth/callback'];
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
 
   if (!showSidebar) return <>{children}</>;
@@ -60,7 +60,6 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        {/* ADDED TOASTER HERE TO SHOW ERROR/SUCCESS POPUPS */}
         <Toaster position="top-center" />
 
         <AppLayout>

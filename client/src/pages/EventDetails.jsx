@@ -204,9 +204,11 @@ export default function EventDetails() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
 
+  // ── NOW ACTIVE: 500ms skeleton before content renders ──
+  const loaded = usePageLoad(500);
+
   const event = ALL_EVENTS.find((e) => e.id === parseInt(id)) || ALL_EVENTS[0];
   const dm = darkMode;
-  const loaded = usePageLoad(400);
 
   const userInitials = useMemo(() => {
     if (!user) return null;
@@ -326,9 +328,8 @@ export default function EventDetails() {
                       {event.description}
                     </p>
                   </div>
-                </div>
-              </FadeIn>
-            </div>
+                </FadeIn>
+              </div>
 
             {/* Right Column */}
             <div className="lg:col-span-4 min-w-0 w-full">

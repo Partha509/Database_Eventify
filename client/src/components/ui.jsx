@@ -98,9 +98,6 @@ export function AnimationStyles() {
 }
 
 // ─── FadeIn ───────────────────────────────────────────────────────────────────
-// Wraps children with a fade + slide-up entrance animation
-// delay: ms delay before animation starts
-// duration: not used directly — controlled by CSS class
 
 export function FadeIn({
   children,
@@ -119,7 +116,6 @@ export function FadeIn({
 }
 
 // ─── FadeInGroup ──────────────────────────────────────────────────────────────
-// Wraps an array of children — each child staggers by `stagger` ms
 
 export function FadeInGroup({ children, stagger = 80, baseDelay = 0, className = "" }) {
   return (
@@ -140,7 +136,6 @@ export function FadeInGroup({ children, stagger = 80, baseDelay = 0, className =
 }
 
 // ─── SlideIn ──────────────────────────────────────────────────────────────────
-// Slide in from left or right
 
 export function SlideIn({ children, from = "right", delay = 0, className = "" }) {
   const cls = from === "left" ? "anim-slide-left" : "anim-slide-right";
@@ -155,7 +150,6 @@ export function SlideIn({ children, from = "right", delay = 0, className = "" })
 }
 
 // ─── ScalePop ─────────────────────────────────────────────────────────────────
-// Scale + bounce pop entrance — great for modals, cards, avatars
 
 export function ScalePop({ children, delay = 0, className = "" }) {
   return (
@@ -169,7 +163,6 @@ export function ScalePop({ children, delay = 0, className = "" }) {
 }
 
 // ─── PageTransition ───────────────────────────────────────────────────────────
-// Wraps an entire page — fades in the whole page on mount
 
 export function PageTransition({ children, className = "" }) {
   return (
@@ -183,8 +176,6 @@ export function PageTransition({ children, className = "" }) {
 }
 
 // ─── CountUp ─────────────────────────────────────────────────────────────────
-// Animates a number from 0 to `end` over `duration` ms
-// Handles: integers, floats, prefixed ($, ৳), suffixed (+, %)
 
 export function CountUp({
   value,
@@ -198,7 +189,6 @@ export function CountUp({
   const rafRef     = useRef(null);
   const startRef   = useRef(null);
 
-  // Parse prefix, suffix, number from value string like "$18,420" or "2,847+" or "12"
   const parse = (v) => {
     const str    = String(v).replace(/,/g, "");
     const prefix = str.match(/^[^\d.-]*/)?.[0]  || "";
@@ -216,7 +206,6 @@ export function CountUp({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !animated) {
@@ -232,14 +221,12 @@ export function CountUp({
 
   useEffect(() => {
     if (!animated) return;
-
     const { prefix, suffix, num } = parse(value);
     const timeout = setTimeout(() => {
       const animate = (timestamp) => {
         if (!startRef.current) startRef.current = timestamp;
         const elapsed  = timestamp - startRef.current;
         const progress = Math.min(elapsed / duration, 1);
-        // Ease out cubic
         const eased    = 1 - Math.pow(1 - progress, 3);
         setDisplay(format(eased * num, prefix, suffix));
         if (progress < 1) {
@@ -278,7 +265,6 @@ function SkeletonBox({ className = "", rounded = "rounded-2xl" }) {
 }
 
 // ─── SkeletonEventCard ────────────────────────────────────────────────────────
-// Mimics EventCard layout
 
 export function SkeletonEventCard({ darkMode }) {
   return (
@@ -288,18 +274,14 @@ export function SkeletonEventCard({ darkMode }) {
         ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-100"}
       `}
     >
-      {/* Image area */}
       <SkeletonBox
         className={`w-full h-48 sm:h-72 mb-5 sm:mb-8 ${darkMode ? "bg-white/5" : "bg-slate-100"}`}
         rounded="rounded-[28px] sm:rounded-[36px]"
       />
       <div className="px-2 sm:px-4 pb-2 sm:pb-4 space-y-4">
-        {/* Category pill */}
         <SkeletonBox className={`h-6 w-20 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
-        {/* Title */}
         <SkeletonBox className={`h-5 w-4/5 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-lg" />
         <SkeletonBox className={`h-5 w-3/5 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-lg" />
-        {/* Footer */}
         <div className={`flex justify-between pt-4 border-t-2 ${darkMode ? "border-white/5" : "border-slate-50"}`}>
           <SkeletonBox className={`h-4 w-24 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
           <SkeletonBox className={`h-4 w-16 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
@@ -310,7 +292,6 @@ export function SkeletonEventCard({ darkMode }) {
 }
 
 // ─── SkeletonStatCard ─────────────────────────────────────────────────────────
-// Mimics MyEvents stat card layout
 
 export function SkeletonStatCard({ darkMode, gradient = false }) {
   return (
@@ -331,7 +312,6 @@ export function SkeletonStatCard({ darkMode, gradient = false }) {
 }
 
 // ─── SkeletonHostedCard ───────────────────────────────────────────────────────
-// Mimics MyEvents hosted event card
 
 export function SkeletonHostedCard({ darkMode }) {
   return (
@@ -359,24 +339,19 @@ export function SkeletonHostedCard({ darkMode }) {
 }
 
 // ─── SkeletonProfileCard ──────────────────────────────────────────────────────
-// Mimics Profile left card
 
 export function SkeletonProfileCard({ darkMode }) {
   return (
     <div className="bg-gradient-to-br from-indigo-600/60 to-violet-700/60 rounded-[32px] sm:rounded-[45px] p-7 sm:p-10 skeleton-pulse">
       <div className="flex flex-col items-center">
-        {/* Avatar */}
         <SkeletonBox className={`w-24 h-24 sm:w-32 sm:h-32 mb-5 ${darkMode ? "bg-white/10" : "bg-white/20"}`} rounded="rounded-full" />
-        {/* Name */}
         <SkeletonBox className={`h-6 w-32 mb-2 ${darkMode ? "bg-white/10" : "bg-white/20"}`} rounded="rounded-lg" />
         <SkeletonBox className={`h-4 w-24 mb-8 ${darkMode ? "bg-white/10" : "bg-white/20"}`} rounded="rounded-md" />
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3 w-full mb-7">
           {[1, 2, 3].map((i) => (
             <SkeletonBox key={i} className={`h-14 ${darkMode ? "bg-white/10" : "bg-white/20"}`} rounded="rounded-xl" />
           ))}
         </div>
-        {/* Button */}
         <SkeletonBox className={`h-12 w-full ${darkMode ? "bg-white/10" : "bg-white/20"}`} rounded="rounded-xl" />
       </div>
     </div>
@@ -384,7 +359,6 @@ export function SkeletonProfileCard({ darkMode }) {
 }
 
 // ─── SkeletonInfoSection ──────────────────────────────────────────────────────
-// Mimics Profile info/preferences section
 
 export function SkeletonInfoSection({ darkMode, rows = 2 }) {
   return (
@@ -410,8 +384,121 @@ export function SkeletonInfoSection({ darkMode, rows = 2 }) {
   );
 }
 
+// ─── SkeletonEventDetail ──────────────────────────────────────────────────────
+// Mimics EventDetails page layout (hero image + about + booking card)
+
+export function SkeletonEventDetail({ darkMode }) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
+
+      {/* Left column */}
+      <div className="lg:col-span-8 space-y-5 sm:space-y-8">
+
+        {/* Hero image */}
+        <SkeletonBox
+          className={`w-full h-[220px] sm:h-[320px] lg:h-[420px] skeleton-pulse ${darkMode ? "bg-white/5" : "bg-slate-100"}`}
+          rounded="rounded-[24px] sm:rounded-[32px]"
+        />
+
+        {/* Title + About */}
+        <div className="space-y-4 skeleton-pulse">
+          <SkeletonBox className={`h-8 w-3/4 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+          <SkeletonBox className={`h-6 w-1/2 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-lg" />
+
+          {/* About card */}
+          <div className={`p-5 sm:p-7 rounded-[20px] sm:rounded-[24px] space-y-3 ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-100"}`}>
+            <SkeletonBox className={`h-5 w-40 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-lg" />
+            <SkeletonBox className={`h-4 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+            <SkeletonBox className={`h-4 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+            <SkeletonBox className={`h-4 w-2/3 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+          </div>
+        </div>
+      </div>
+
+      {/* Right column — booking card */}
+      <div className="lg:col-span-4">
+        <div className={`p-5 sm:p-7 rounded-[22px] sm:rounded-[28px] space-y-5 skeleton-pulse ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-100 shadow-md"}`}>
+          <SkeletonBox className={`h-4 w-24 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+          <SkeletonBox className={`h-10 w-36 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+          <div className={`h-px ${darkMode ? "bg-white/5" : "bg-slate-100"}`} />
+          <SkeletonBox className={`h-4 w-28 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <SkeletonBox className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+              <div className="flex-1 space-y-1.5">
+                <SkeletonBox className={`h-3 w-16 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+                <SkeletonBox className={`h-4 w-32 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+              </div>
+            </div>
+          ))}
+          <div className={`h-px ${darkMode ? "bg-white/5" : "bg-slate-100"}`} />
+          <SkeletonBox className={`h-12 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl sm:rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SkeletonCreateEvent ──────────────────────────────────────────────────────
+// Mimics CreateEvent page layout (AI widget + image upload + form fields)
+
+export function SkeletonCreateEvent({ darkMode }) {
+  return (
+    <div className="space-y-8 sm:space-y-10 skeleton-pulse">
+
+      {/* AI Magic widget */}
+      <div className={`rounded-[32px] p-6 sm:p-8 ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-100"}`}>
+        <div className="flex gap-6 items-center">
+          <SkeletonBox className={`w-14 h-14 shrink-0 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-2xl" />
+          <div className="flex-1 space-y-3">
+            <SkeletonBox className={`h-5 w-40 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-lg" />
+            <SkeletonBox className={`h-4 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+            <div className="flex gap-3">
+              <SkeletonBox className={`h-11 flex-1 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+              <SkeletonBox className={`h-11 w-32 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cover image upload */}
+      <div className={`p-5 sm:p-10 rounded-[32px] sm:rounded-[48px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
+        <SkeletonBox className={`h-4 w-28 mb-4 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+        <SkeletonBox
+          className={`w-full h-[200px] sm:h-[300px] lg:h-[400px] ${darkMode ? "bg-white/5" : "bg-slate-100"}`}
+          rounded="rounded-[24px] sm:rounded-[36px]"
+        />
+      </div>
+
+      {/* Core details form */}
+      <div className={`p-5 sm:p-12 rounded-[32px] sm:rounded-[56px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
+        <SkeletonBox className={`h-7 w-48 mb-8 sm:mb-12 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10">
+          <div className="sm:col-span-2 space-y-2">
+            <SkeletonBox className={`h-3 w-24 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+            <SkeletonBox className={`h-14 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl sm:rounded-2xl" />
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="space-y-2">
+              <SkeletonBox className={`h-3 w-20 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+              <SkeletonBox className={`h-14 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl sm:rounded-2xl" />
+            </div>
+          ))}
+          <div className="sm:col-span-2 space-y-2">
+            <SkeletonBox className={`h-3 w-32 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-md" />
+            <SkeletonBox className={`h-36 w-full ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-xl sm:rounded-2xl" />
+          </div>
+        </div>
+        <div className={`flex gap-4 mt-10 pt-8 border-t ${darkMode ? "border-white/5" : "border-slate-100"}`}>
+          <SkeletonBox className={`h-14 flex-1 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-[22px] sm:rounded-[28px]" />
+          <SkeletonBox className={`h-14 flex-1 ${darkMode ? "bg-white/5" : "bg-slate-100"}`} rounded="rounded-[22px] sm:rounded-[28px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SkeletonCarousel ─────────────────────────────────────────────────────────
-// Mimics featured carousel
 
 export function SkeletonCarousel({ darkMode }) {
   return (
@@ -432,7 +519,6 @@ export function SkeletonCarousel({ darkMode }) {
 }
 
 // ─── SkeletonEventGrid ────────────────────────────────────────────────────────
-// 6 skeleton event cards in a responsive grid
 
 export function SkeletonEventGrid({ darkMode, count = 6 }) {
   return (
@@ -445,7 +531,6 @@ export function SkeletonEventGrid({ darkMode, count = 6 }) {
 }
 
 // ─── usePageLoad ──────────────────────────────────────────────────────────────
-// Hook — returns true after a short delay, used to switch skeleton → real content
 
 export function usePageLoad(delay = 600) {
   const [loaded, setLoaded] = useState(false);
@@ -457,7 +542,6 @@ export function usePageLoad(delay = 600) {
 }
 
 // ─── useInView ────────────────────────────────────────────────────────────────
-// Hook — returns [ref, inView] — triggers when element enters viewport
 
 export function useInView(threshold = 0.15) {
   const ref    = useRef(null);
@@ -478,7 +562,6 @@ export function useInView(threshold = 0.15) {
 }
 
 // ─── InViewFade ───────────────────────────────────────────────────────────────
-// Fades + slides up when element scrolls into view
 
 export function InViewFade({ children, delay = 0, className = "" }) {
   const [ref, inView] = useInView();

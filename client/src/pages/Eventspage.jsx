@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useContext, useRef, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
 import { AuthContext } from "../context/AuthContext";
@@ -221,6 +222,37 @@ const getGlobalStyles = (priceRange, darkMode) => `
   @keyframes showMoreCard {
     from { opacity: 0; transform: translateY(48px) scale(0.95); }
     to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+
+  /* ── Hero section animations ── */
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+  @keyframes heroBtnPop {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  }
+  @keyframes heroGlowPulse {
+    0%, 100% { opacity: 0.15; transform: scale(1);    }
+    50%      { opacity: 0.3;  transform: scale(1.08); }
+  }
+  @keyframes heroBtnClick {
+    0%   { transform: scale(1);    }
+    40%  { transform: scale(0.93); }
+    100% { transform: scale(1);    }
+  }
+  .hero-fade-up {
+    animation: heroFadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .hero-btn-pop {
+    animation: heroBtnPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .hero-glow {
+    animation: heroGlowPulse 4s ease-in-out infinite;
+  }
+  .hero-btn-click {
+    animation: heroBtnClick 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   /* ── Mobile bottom nav safe area ── */
@@ -618,8 +650,88 @@ function MobileTopBar({ darkMode, searchQuery, setSearchQuery, isSearchActive, s
 // ─── Notification Panel ───────────────────────────────────────────────────────
 
 function NotificationPanel({ darkMode, showNotif, setShowNotif }) {
+  const bellRef = useRef(null);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+
+  useEffect(() => {
+    if (showNotif && bellRef.current) {
+      const rect = bellRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        top: rect.bottom + 12,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showNotif]);
+
+  const dropdown = showNotif ? ReactDOM.createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[499]"
+        onClick={() => setShowNotif(false)}
+      />
+      <div
+        className={`
+          w-[360px] z-[500] border
+          rounded-[28px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
+          animate-in fade-in zoom-in-95 duration-300
+          ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
+        `}
+        style={dropdownStyle}
+      >
+        <div className="p-5">
+          <button
+            onClick={() => setShowNotif(false)}
+            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-black text-xs uppercase tracking-widest"
+          >
+            <ChevronLeft size={16} /> Back
+          </button>
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <h2 className={`text-xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+                Notifications
+              </h2>
+              <p className="text-slate-500 font-bold mt-0.5 text-sm">Stay updated</p>
+            </div>
+            <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
+              Mark all read
+            </button>
+          </div>
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar pr-1">
+            {NOTIFICATIONS.map((n) => (
+              <div
+                key={n.id}
+                className={`
+                  p-3 rounded-[18px] border flex gap-3
+                  transition-all cursor-pointer hover:translate-x-1
+                  ${darkMode
+                    ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
+                    : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
+                  }
+                `}
+              >
+                <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
+                  {React.cloneElement(n.icon, { size: 16 })}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
+                    {n.unread && <div className="w-2 h-2 bg-indigo-600 rounded-full shrink-0 mt-1 ml-2" />}
+                  </div>
+                  <p className="text-slate-500 text-xs font-bold mt-0.5 leading-relaxed">{n.desc}</p>
+                  <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1 block">{n.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  ) : null;
+
   return (
-    <div className="relative">
+    <div className="relative" ref={bellRef}>
       <button
         onClick={() => setShowNotif(!showNotif)}
         className={`
@@ -638,64 +750,7 @@ function NotificationPanel({ darkMode, showNotif, setShowNotif }) {
       <span className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-500 text-white text-[11px] font-black flex items-center justify-center rounded-full border-[3px] border-white shadow-lg">
         3
       </span>
-
-      {showNotif && (
-        <div
-          className={`
-            absolute top-20 right-0 w-[calc(100vw-2rem)] sm:w-[450px] z-[100] border
-            rounded-[32px] sm:rounded-[40px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
-            animate-in fade-in zoom-in-95 duration-300
-            ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
-          `}
-        >
-          <div className="p-6 sm:p-10">
-            <button
-              onClick={() => setShowNotif(false)}
-              className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-5 font-black text-xs uppercase tracking-widest"
-            >
-              <ChevronLeft size={16} /> Back
-            </button>
-            <div className="flex justify-between items-end mb-6 sm:mb-10">
-              <div>
-                <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-                  Notifications
-                </h2>
-                <p className="text-slate-500 font-bold mt-1">Stay updated</p>
-              </div>
-              <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
-                Mark all read
-              </button>
-            </div>
-            <div className="space-y-3 sm:space-y-5 max-h-[60vh] overflow-y-auto no-scrollbar pr-1 sm:pr-2">
-              {NOTIFICATIONS.map((n) => (
-                <div
-                  key={n.id}
-                  className={`
-                    p-4 sm:p-7 rounded-[24px] sm:rounded-[32px] border flex gap-4 sm:gap-6
-                    transition-all cursor-pointer hover:translate-x-2
-                    ${darkMode
-                      ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
-                      : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
-                    }
-                  `}
-                >
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[22px] flex items-center justify-center text-white shrink-0 shadow-2xl ${n.color}`}>
-                    {n.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
-                      {n.unread && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full mt-1 shrink-0 ml-2" />}
-                    </div>
-                    <p className="text-slate-500 text-xs font-bold mt-1 leading-relaxed">{n.desc}</p>
-                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 block">{n.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {dropdown}
     </div>
   );
 }
@@ -767,6 +822,149 @@ function TopBar({
         )}
       </div>
     </header>
+  );
+}
+
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+
+function HeroSection({ darkMode, navigate, setIsSearchActive }) {
+  const [exploreClicked, setExploreClicked] = useState(false);
+  const [createClicked, setCreateClicked] = useState(false);
+
+  const handleExplore = () => {
+    setExploreClicked(true);
+    setTimeout(() => {
+      setExploreClicked(false);
+      setIsSearchActive(true);
+      // smooth scroll to search results area
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 350);
+  };
+
+  const handleCreate = () => {
+    setCreateClicked(true);
+    setTimeout(() => {
+      navigate("/create-event");
+    }, 350);
+  };
+
+  return (
+    <section className="mb-10 sm:mb-16 max-w-full">
+      <div
+        className={`
+          relative rounded-[32px] sm:rounded-[48px] overflow-hidden
+          px-6 sm:px-16 py-10 sm:py-14 text-center
+          flex flex-col items-center justify-center
+          ${darkMode
+            ? "bg-[#1E0B3B] border border-white/5"
+            : "bg-white border border-slate-100 shadow-sm"
+          }
+        `}
+      >
+        {/* ── Ambient glow blobs ── */}
+        <div
+          className="hero-glow absolute -top-24 -left-24 w-96 h-96 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)" }}
+        />
+        <div
+          className="hero-glow absolute -bottom-24 -right-24 w-96 h-96 rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)",
+            animationDelay: "2s",
+          }}
+        />
+        <div
+          className="hero-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse, rgba(236,72,153,0.1) 0%, transparent 70%)",
+            animationDelay: "1s",
+          }}
+        />
+
+        {/* ── Headline ── */}
+        <h1
+          className="hero-fade-up relative z-10 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-4 sm:mb-5"
+          style={{
+            animationDelay: "0ms",
+            backgroundImage: "linear-gradient(135deg, #818cf8 0%, #a78bfa 35%, #f472b6 65%, #fb7185 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Create. Connect.<br />Celebrate.
+        </h1>
+
+        {/* ── Subtitle ── */}
+        <p
+          className={`
+            hero-fade-up relative z-10
+            text-sm sm:text-base lg:text-lg font-bold leading-relaxed
+            max-w-xl sm:max-w-2xl mb-6 sm:mb-8
+            ${darkMode ? "text-slate-400" : "text-slate-500"}
+          `}
+          style={{ animationDelay: "120ms" }}
+        >
+          Discover amazing events or create your own unforgettable experiences
+          with Eventify, the ultimate event management platform.
+        </p>
+
+        {/* ── CTA Buttons ── */}
+        <div
+          className="hero-btn-pop relative z-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-5"
+          style={{ animationDelay: "220ms" }}
+        >
+          {/* Explore Events */}
+          <button
+            onClick={handleExplore}
+            className={`
+              group flex items-center gap-3
+              px-7 sm:px-10 py-4 sm:py-5
+              rounded-[18px] sm:rounded-[22px]
+              font-black text-sm sm:text-base text-white
+              bg-indigo-600 hover:bg-indigo-700
+              shadow-2xl shadow-indigo-600/40
+              transition-all duration-300
+              hover:-translate-y-1 hover:shadow-indigo-600/50
+              active:scale-95
+              w-full sm:w-auto
+              ${exploreClicked ? "hero-btn-click" : ""}
+            `}
+          >
+            Explore Events
+            <ArrowRight
+              size={18}
+              className="transition-transform duration-300 group-hover:translate-x-1"
+            />
+          </button>
+
+          {/* Create Event */}
+          <button
+            onClick={handleCreate}
+            className={`
+              flex items-center gap-3
+              px-7 sm:px-10 py-4 sm:py-5
+              rounded-[18px] sm:rounded-[22px]
+              font-black text-sm sm:text-base
+              border-2 transition-all duration-300
+              hover:-translate-y-1
+              active:scale-95
+              w-full sm:w-auto
+              ${createClicked ? "hero-btn-click" : ""}
+              ${darkMode
+                ? "border-white/15 text-white hover:border-indigo-400/60 hover:bg-white/5"
+                : "border-slate-200 text-slate-800 hover:border-indigo-300 hover:bg-indigo-50/50"
+              }
+            `}
+          >
+            <PlusSquare size={18} className="text-indigo-500" />
+            Create Event
+          </button>
+        </div>
+
+
+      </div>
+    </section>
   );
 }
 
@@ -987,6 +1185,104 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
         <div className="sm:hidden absolute bottom-16 right-5 z-10 flex items-center gap-1 text-white/60 text-[10px] font-bold">
           <ChevronLeft size={12} /> swipe <ChevronRight size={12} />
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── How It Works ─────────────────────────────────────────────────────────────
+
+const HOW_IT_WORKS = [
+  {
+    step: "Step 1",
+    title: "Discover Events",
+    desc: "Browse through thousands of events or use our smart filters to find exactly what you're looking for.",
+    emoji: "🔍",
+    color: "from-indigo-500/20 to-violet-500/10",
+    border: "border-indigo-500/20",
+    stepColor: "text-indigo-400",
+  },
+  {
+    step: "Step 2",
+    title: "Book Your Spot",
+    desc: "Secure your tickets instantly with our simple and safe booking process. Get instant confirmation.",
+    emoji: "🎟️",
+    color: "from-amber-500/15 to-orange-500/10",
+    border: "border-amber-500/20",
+    stepColor: "text-amber-400",
+  },
+  {
+    step: "Step 3",
+    title: "Celebrate Together",
+    desc: "Show up and enjoy! Connect with like-minded people and create unforgettable memories.",
+    emoji: "🎉",
+    color: "from-rose-500/15 to-pink-500/10",
+    border: "border-rose-500/20",
+    stepColor: "text-rose-400",
+  },
+];
+
+function HowItWorks({ darkMode, isSearchActive }) {
+  if (isSearchActive) return null;
+
+  return (
+    <section className="mb-10 sm:mb-16 max-w-full">
+      {/* Section heading */}
+      <div className="text-center mb-8 sm:mb-12">
+        <h2
+          className={`text-2xl sm:text-4xl font-black tracking-tight mb-2 sm:mb-3 ${darkMode ? "text-white" : "text-slate-900"}`}
+        >
+          How It Works
+        </h2>
+        <p className={`text-sm sm:text-base font-bold ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+          Getting started is simple and quick
+        </p>
+      </div>
+
+      {/* Cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {HOW_IT_WORKS.map((item, i) => (
+          <div
+            key={item.step}
+            className={`
+              relative rounded-[28px] sm:rounded-[36px] p-6 sm:p-8
+              border backdrop-blur-sm
+              transition-all duration-500 hover:-translate-y-2
+              bg-gradient-to-br ${item.color} ${item.border}
+              ${darkMode ? "bg-[#1E0B3B]/80" : "bg-white/80 shadow-sm"}
+            `}
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            {/* Emoji icon */}
+            <div className="text-5xl sm:text-6xl mb-5 sm:mb-6 select-none">
+              {item.emoji}
+            </div>
+
+            {/* Divider line matching screenshot */}
+            <div
+              className={`
+                absolute right-6 sm:right-8 top-1/2 -translate-y-1/2
+                hidden sm:block w-px h-10
+                ${i < HOW_IT_WORKS.length - 1 ? "bg-indigo-500/30" : "hidden"}
+              `}
+            />
+
+            {/* Step label */}
+            <p className={`text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] mb-2 ${item.stepColor}`}>
+              {item.step}
+            </p>
+
+            {/* Title */}
+            <h3 className={`text-lg sm:text-xl font-black mb-3 sm:mb-4 tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+              {item.title}
+            </h3>
+
+            {/* Description */}
+            <p className={`text-sm font-bold leading-relaxed ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+              {item.desc}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -1255,8 +1551,8 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
       {isChatOpen && (
         <div
           className={`
-            w-[calc(100vw-2rem)] sm:w-[420px] h-[520px] sm:h-[680px]
-            mb-4 sm:mb-8 rounded-[2.5rem] sm:rounded-[3.5rem]
+            w-[calc(100vw-2rem)] sm:w-[360px] h-[440px] sm:h-[520px]
+            mb-3 sm:mb-4 rounded-[1.5rem] sm:rounded-[2rem]
             shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)]
             overflow-hidden flex flex-col transition-all duration-500
             animate-in slide-in-from-left-12 border backdrop-blur-3xl
@@ -1264,10 +1560,10 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
           `}
         >
           {/* header area */}
-          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-6 sm:p-10 flex items-center justify-between shadow-xl shrink-0">
+          <div className="bg-gradient-to-r from-indigo-700 to-violet-700 p-4 sm:p-5 flex items-center justify-between shadow-xl shrink-0">
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="relative">
-                <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 rounded-2xl backdrop-blur-xl flex items-center justify-center border border-white/30 shadow-inner">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-xl backdrop-blur-xl flex items-center justify-center border border-white/30 shadow-inner">
                   <Sparkles className="text-white" size={22} />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-emerald-500 rounded-full border-[3px] sm:border-[4px] border-indigo-700 shadow-lg animate-pulse" />
@@ -1316,10 +1612,10 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
           </div>
 
           {/* input box area */}
-          <div className={`p-5 sm:p-8 border-t shrink-0 ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
+          <div className={`p-3 sm:p-4 border-t shrink-0 ${darkMode ? "border-white/5 bg-[#0A0318]/50" : "border-slate-100 bg-slate-50/50"}`}>
             <div
               className={`
-                flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border transition-all
+                flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border transition-all
                 ${darkMode
                   ? "bg-[#1E0B3B] border-white/10 focus-within:border-indigo-500"
                   : "bg-white border-slate-200 focus-within:border-indigo-400"
@@ -1337,9 +1633,9 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
               <button
                 onClick={handleSend}
                 disabled={isLoading || !input.trim()}
-                className="w-11 h-11 sm:w-14 sm:h-14 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
+                className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 disabled:bg-indigo-400 hover:bg-indigo-700 rounded-[0.8rem] sm:rounded-[1rem] flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 active:scale-95 transition-all"
               >
-                <Send size={18} />
+                <Send size={14} />
               </button>
             </div>
           </div>
@@ -1349,9 +1645,9 @@ function AIChatWidget({ darkMode, isChatOpen, setIsChatOpen }) {
       {/* floating toggle button */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center text-white shadow-[0_25px_60px_-15px_rgba(79,70,229,0.5)] hover:scale-110 active:scale-90 transition-all ripple-btn border-2 sm:border-4 border-white/10"
+        className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[1rem] sm:rounded-[1.25rem] flex items-center justify-center text-white shadow-[0_25px_60px_-15px_rgba(79,70,229,0.5)] hover:scale-110 active:scale-90 transition-all ripple-btn border-2 border-white/10"
       >
-        {isChatOpen ? <X size={26} strokeWidth={2.5} /> : <MessageCircle size={26} strokeWidth={2.5} />}
+        {isChatOpen ? <X size={18} strokeWidth={2.5} /> : <MessageCircle size={18} strokeWidth={2.5} />}
       </button>
     </div>
   );
@@ -1461,9 +1757,26 @@ export default function Eventpage() {
           </div>
         ) : (
           <>
+            {/* ── Hero Section — shown above Featured Events ── */}
+            {!isSearchActive && (
+              <FadeIn delay={40}>
+                <HeroSection
+                  darkMode={darkMode}
+                  navigate={navigate}
+                  setIsSearchActive={setIsSearchActive}
+                />
+              </FadeIn>
+            )}
+
             <FadeIn delay={80}>
               <FeaturedEvents
                 darkMode={darkMode} navigate={navigate}
+                isSearchActive={isSearchActive}
+              />
+            </FadeIn>
+            <FadeIn delay={120}>
+              <HowItWorks
+                darkMode={darkMode}
                 isSearchActive={isSearchActive}
               />
             </FadeIn>
