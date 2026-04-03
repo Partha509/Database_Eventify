@@ -17,9 +17,13 @@ class CreateUsersTable extends Migration
         $table->id('user_id');
         $table->string('user_name',50);
         $table->string('email')->unique();
-        $table->string('phone')->unique();
-        $table->string('password_hash');
-        $table->integer('role_id');
+
+        $table->string('phone')->unique()->nullable(); 
+        $table->string('password_hash')->nullable();
+
+        $table->string('google_id')->nullable()->unique();
+
+        $table->integer('role_id')->default(2);
         $table->timestamps();
  });
     }

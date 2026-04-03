@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useContext, useRef, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
 import { AuthContext } from "../context/AuthContext";
@@ -649,8 +650,88 @@ function MobileTopBar({ darkMode, searchQuery, setSearchQuery, isSearchActive, s
 // ─── Notification Panel ───────────────────────────────────────────────────────
 
 function NotificationPanel({ darkMode, showNotif, setShowNotif }) {
+  const bellRef = useRef(null);
+  const [dropdownStyle, setDropdownStyle] = useState({});
+
+  useEffect(() => {
+    if (showNotif && bellRef.current) {
+      const rect = bellRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        top: rect.bottom + 12,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [showNotif]);
+
+  const dropdown = showNotif ? ReactDOM.createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[499]"
+        onClick={() => setShowNotif(false)}
+      />
+      <div
+        className={`
+          w-[360px] z-[500] border
+          rounded-[28px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
+          animate-in fade-in zoom-in-95 duration-300
+          ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
+        `}
+        style={dropdownStyle}
+      >
+        <div className="p-5">
+          <button
+            onClick={() => setShowNotif(false)}
+            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-black text-xs uppercase tracking-widest"
+          >
+            <ChevronLeft size={16} /> Back
+          </button>
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <h2 className={`text-xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
+                Notifications
+              </h2>
+              <p className="text-slate-500 font-bold mt-0.5 text-sm">Stay updated</p>
+            </div>
+            <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
+              Mark all read
+            </button>
+          </div>
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar pr-1">
+            {NOTIFICATIONS.map((n) => (
+              <div
+                key={n.id}
+                className={`
+                  p-3 rounded-[18px] border flex gap-3
+                  transition-all cursor-pointer hover:translate-x-1
+                  ${darkMode
+                    ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
+                    : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
+                  }
+                `}
+              >
+                <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
+                  {React.cloneElement(n.icon, { size: 16 })}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
+                    {n.unread && <div className="w-2 h-2 bg-indigo-600 rounded-full shrink-0 mt-1 ml-2" />}
+                  </div>
+                  <p className="text-slate-500 text-xs font-bold mt-0.5 leading-relaxed">{n.desc}</p>
+                  <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1 block">{n.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  ) : null;
+
   return (
-    <div className="relative">
+    <div className="relative" ref={bellRef}>
       <button
         onClick={() => setShowNotif(!showNotif)}
         className={`
@@ -669,6 +750,7 @@ function NotificationPanel({ darkMode, showNotif, setShowNotif }) {
       <span className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-500 text-white text-[11px] font-black flex items-center justify-center rounded-full border-[3px] border-white shadow-lg">
         3
       </span>
+      {dropdown}
     </div>
   );
 }
@@ -1751,67 +1833,6 @@ export default function Eventpage() {
                     className={`p-4 rounded-[20px] border flex gap-4 ${darkMode ? "bg-[#0F0121] border-white/5" : "bg-slate-50 border-slate-100"}`}
                   >
                     <div className={`w-10 h-10 rounded-[14px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
-                      {React.cloneElement(n.icon, { size: 16 })}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h4 className={`font-black text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{n.title}</h4>
-                        {n.unread && <div className="w-2 h-2 bg-indigo-600 rounded-full shrink-0 mt-1 ml-2" />}
-                      </div>
-                      <p className="text-slate-500 text-xs font-bold mt-0.5 leading-relaxed">{n.desc}</p>
-                      <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1 block">{n.time}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop/Tablet notification panel (floating, attached to bell icon) */}
-      {showNotif && (
-        <div className="hidden md:block fixed top-24 right-6 lg:right-12 z-[500]">
-          <div
-            className={`
-        w-[360px] border
-        rounded-[28px] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)]
-        animate-in fade-in zoom-in-95 duration-300
-        ${darkMode ? "bg-[#1E0B3B] border-white/10" : "bg-white border-slate-100"}
-      `}
-          >
-            <div className="p-5">
-              <button
-                onClick={() => setShowNotif(false)}
-                className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-4 font-black text-xs uppercase tracking-widest"
-              >
-                <ChevronLeft size={16} /> Back
-              </button>
-              <div className="flex justify-between items-end mb-4">
-                <div>
-                  <h2 className={`text-xl font-black tracking-tight ${darkMode ? "text-white" : "text-slate-900"}`}>
-                    Notifications
-                  </h2>
-                  <p className="text-slate-500 font-bold mt-0.5 text-sm">Stay updated</p>
-                </div>
-                <button className="text-indigo-600 font-black text-sm hover:underline underline-offset-4 decoration-2">
-                  Mark all read
-                </button>
-              </div>
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto no-scrollbar pr-1">
-                {NOTIFICATIONS.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`
-                p-3 rounded-[18px] border flex gap-3
-                transition-all cursor-pointer hover:translate-x-1
-                ${darkMode
-                        ? "bg-[#0F0121] border-white/5 hover:bg-white/5"
-                        : "bg-[#F8FAFC] border-slate-100 shadow-sm hover:bg-white hover:border-indigo-100"
-                      }
-              `}
-                  >
-                    <div className={`w-10 h-10 rounded-[12px] flex items-center justify-center text-white shrink-0 ${n.color}`}>
                       {React.cloneElement(n.icon, { size: 16 })}
                     </div>
                     <div className="flex-1 min-w-0">
