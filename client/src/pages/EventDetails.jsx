@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import {
   Calendar, Clock, MapPin, Users, ArrowLeft,
   Info, LayoutDashboard, PlusSquare, CheckCircle,
-  Ticket, Bell, User, Sparkles
+  Ticket, Bell, User
 } from "lucide-react";
 import { AnimationStyles, FadeIn, SlideIn, usePageLoad } from "../components/ui";
 import CheckoutPanel from "../components/CheckoutPanel";
@@ -290,6 +290,8 @@ export default function EventDetails() {
 
         <div className="px-4 sm:px-8 lg:px-10 py-5 sm:py-8 pb-8 sm:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
+            
+            {/* Left Column */}
             <div className="lg:col-span-8 space-y-5 sm:space-y-8 min-w-0">
               <FadeIn delay={0}>
                 <div className="relative rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl">
@@ -328,56 +330,60 @@ export default function EventDetails() {
               </FadeIn>
             </div>
 
-            <SlideIn from="right" delay={180} className="lg:col-span-4 min-w-0 w-full">
-              <div
-                className={`
-                  p-5 sm:p-7 rounded-[22px] sm:rounded-[28px] lg:sticky lg:top-24
-                  ${dm ? "bg-[#1E0B3B] border border-white/5" : "bg-white border border-slate-100 shadow-md"}
-                `}
-              >
-                <div className="mb-5 sm:mb-6">
-                  <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Starting from</p>
-                  <div className="flex items-end gap-2">
-                    <span className={`text-3xl sm:text-4xl font-black ${dm ? "text-white" : "text-slate-900"}`}>
-                      ৳{event.price.toLocaleString()}
-                    </span>
-                    <span className="text-slate-400 font-bold text-sm mb-1">/ person</span>
-                  </div>
-                </div>
-
-                <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
-                <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest mb-4 sm:mb-5 text-slate-400">Event Details</h3>
-                <div className="space-y-4 sm:space-y-5 mb-5 sm:mb-7">
-                  <DetailItem icon={<Calendar />} label="Date" value={event.date} dm={dm} />
-                  <DetailItem icon={<Clock />} label="Time" value={event.time} dm={dm} />
-                  <DetailItem icon={<MapPin />} label="Location" value={event.location} dm={dm} />
-                  <DetailItem icon={<Users />} label="Attendees" value={event.attendees} dm={dm} />
-                </div>
-
-                <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
-
-                <button
-                  onClick={() => !isBooked && setShowCheckout(true)}
+            {/* Right Column */}
+            <div className="lg:col-span-4 min-w-0 w-full">
+              <SlideIn from="right" delay={180}>
+                <div
                   className={`
-                    w-full py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base
-                    transition-all ripple-btn active:scale-95 shadow-lg
-                    flex items-center justify-center gap-2
-                    ${isBooked
-                      ? "bg-emerald-500 text-white shadow-emerald-500/20 cursor-default"
-                      : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
-                    }
+                    p-5 sm:p-7 rounded-[22px] sm:rounded-[28px] lg:sticky lg:top-24
+                    ${dm ? "bg-[#1E0B3B] border border-white/5" : "bg-white border border-slate-100 shadow-md"}
                   `}
                 >
-                  {isBooked
-                    ? <><CheckCircle size={18} /> Ticket Reserved</>
-                    : <><Ticket size={18} /> Reserve Ticket</>
-                  }
-                </button>
-                <p className="text-center text-[11px] sm:text-xs text-slate-400 font-medium mt-3">
-                  Free cancellation up to 48hrs before
-                </p>
-              </div>
-            </SlideIn>
+                  <div className="mb-5 sm:mb-6">
+                    <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Starting from</p>
+                    <div className="flex items-end gap-2">
+                      <span className={`text-3xl sm:text-4xl font-black ${dm ? "text-white" : "text-slate-900"}`}>
+                        ৳{event.price.toLocaleString()}
+                      </span>
+                      <span className="text-slate-400 font-bold text-sm mb-1">/ person</span>
+                    </div>
+                  </div>
+
+                  <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
+                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest mb-4 sm:mb-5 text-slate-400">Event Details</h3>
+                  <div className="space-y-4 sm:space-y-5 mb-5 sm:mb-7">
+                    <DetailItem icon={<Calendar />} label="Date" value={event.date} dm={dm} />
+                    <DetailItem icon={<Clock />} label="Time" value={event.time} dm={dm} />
+                    <DetailItem icon={<MapPin />} label="Location" value={event.location} dm={dm} />
+                    <DetailItem icon={<Users />} label="Attendees" value={event.attendees} dm={dm} />
+                  </div>
+
+                  <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
+
+                  <button
+                    onClick={() => !isBooked && setShowCheckout(true)}
+                    className={`
+                      w-full py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base
+                      transition-all ripple-btn active:scale-95 shadow-lg
+                      flex items-center justify-center gap-2
+                      ${isBooked
+                        ? "bg-emerald-500 text-white shadow-emerald-500/20 cursor-default"
+                        : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
+                      }
+                    `}
+                  >
+                    {isBooked
+                      ? <><CheckCircle size={18} /> Ticket Reserved</>
+                      : <><Ticket size={18} /> Reserve Ticket</>
+                    }
+                  </button>
+                  <p className="text-center text-[11px] sm:text-xs text-slate-400 font-medium mt-3">
+                    Free cancellation up to 48hrs before
+                  </p>
+                </div>
+              </SlideIn>
+            </div>
+            
           </div>
         </div>
       </main>
