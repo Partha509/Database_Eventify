@@ -9,7 +9,7 @@ import MyEvents from './pages/MyEvents';
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
 import Profile from './pages/Profile';
-import AuthCallback from './pages/AuthCallback';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 // 1. CREATE THE THEME CONTEXT
 export const ThemeContext = createContext();
@@ -71,7 +71,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
           </Routes>
         </AppLayout>
       </ThemeProvider>
