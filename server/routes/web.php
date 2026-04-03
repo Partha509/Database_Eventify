@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 
@@ -31,6 +32,9 @@ Route::get('/', function () {
     }
 });
 
+Route::get('/auth/google', [GoogleController::class, 'redirect']);
+Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
+
 // This route handles your frontend/SPA routing
 Route::get('{any}', function () {
     if (file_exists(public_path('index.html'))) {
@@ -38,3 +42,4 @@ Route::get('{any}', function () {
     }
     return "API is running, but index.html is missing in the public folder.";
 })->where('any', '.*');
+
