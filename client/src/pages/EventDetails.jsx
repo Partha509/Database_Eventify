@@ -1,32 +1,19 @@
-import React, { useState, useContext, useMemo } from "react";
+import React, { useState, useContext, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
 import { AuthContext } from "../context/AuthContext";
 import {
   Calendar, Clock, MapPin, Users, ArrowLeft,
   Info, LayoutDashboard, PlusSquare, CheckCircle,
-  Ticket, Bell, User
+  Ticket, Bell, User, Loader2
 } from "lucide-react";
-import { AnimationStyles, FadeIn, SlideIn, usePageLoad } from "../components/ui";
+import { AnimationStyles, FadeIn, SlideIn, usePageLoad, SkeletonEventDetail } from "../components/ui";
 import CheckoutPanel from "../components/CheckoutPanel";
+import ApiClient from "../api";
+import { secrets } from "../secrets";
 
-const ALL_EVENTS = [
-  {
-    id: 1,
-    title: "Summer Music Festival 2026",
-    price: 9790,
-    date: "Monday, June 15, 2026",
-    time: "6:00 PM",
-    location: "Golden Gate Park, San Francisco",
-    category: "Music",
-    attendees: "2,547+ going",
-    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070",
-    description:
-      "Experience the ultimate summer music festival featuring top artists from around the world. " +
-      "Three days of non-stop music, food, and celebration in the heart of San Francisco. " +
-      "Join thousands of music lovers for an unforgettable experience.",
-  },
-];
+// Mock data is no longer needed but kept as an empty reference if necessary
+const ALL_EVENTS = [];
 
 function LogoIcon() {
   return (
@@ -204,7 +191,40 @@ export default function EventDetails() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
 
-  const event = ALL_EVENTS.find((e) => e.id === parseInt(id)) || ALL_EVENTS[0];
+  const [eventData, setEventData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEvent() {
+      try {
+        const api = new ApiClient();
+        const data = await api.getEvent(parseInt(id));
+        if (data) {
+          const mapped = {
+            id: data.event_id,
+            title: data.event_name,
+            description: data.description,
+            date: data.start_date_time ? data.start_date_time.split(' ')[0] : "TBD",
+            time: data.start_date_time && data.start_date_time.includes(' ') ? data.start_date_time.split(' ')[1] : '',
+            location: data.venue?.location || "TBD",
+            category: data.category?.category_name || "General",
+            price: data.tickets && data.tickets.length > 0 ? data.tickets[0].price : 0,
+            image: data.image_url 
+              ? `${secrets.backendEndpoint}/storage/${data.image_url}` 
+              : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
+          };
+          setEventData(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch event", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEvent();
+  }, [id]);
+
+  const event = eventData;
   const dm = darkMode;
   const loaded = usePageLoad(400);
 
@@ -218,9 +238,7 @@ export default function EventDetails() {
     return initials.toUpperCase() || "?";
   }, [user]);
 
-  if (!event) {
-    return <div className="p-20 text-center font-black text-2xl">Event Not Found</div>;
-  }
+  // --- Conditionals moved into the main return for consistent layout ---
 
   return (
     <div
@@ -289,102 +307,113 @@ export default function EventDetails() {
         </header>
 
         <div className="px-4 sm:px-8 lg:px-10 py-5 sm:py-8 pb-8 sm:pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
-            
-            {/* Left Column */}
-            <div className="lg:col-span-8 space-y-5 sm:space-y-8 min-w-0">
-              <FadeIn delay={0}>
-                <div className="relative rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-[220px] sm:h-[320px] lg:h-[420px] object-cover"
-                  />
-                  <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6">
-                    <div className="bg-[#0F0121]/75 backdrop-blur-xl px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-white font-black text-xs sm:text-sm border border-white/10 shadow-xl">
-                      ⏱ Starts in 109d 4h
-                    </div>
-                  </div>
-                  <div className="absolute top-4 sm:top-6 left-4 sm:left-6">
-                    <span className="bg-indigo-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg">
-                      {event.category}
-                    </span>
-                  </div>
-                </div>
-              </FadeIn>
-
-              <FadeIn delay={100}>
-                <div className="space-y-4 sm:space-y-5">
-                  <h1 className={`text-2xl sm:text-4xl font-black tracking-tight leading-tight ${dm ? "text-white" : "text-slate-900"}`}>
-                    {event.title}
-                  </h1>
-                  <div className={`p-5 sm:p-7 rounded-[20px] sm:rounded-[24px] ${dm ? "bg-[#1E0B3B]" : "bg-white border border-slate-100 shadow-sm"}`}>
-                    <h3 className={`text-base sm:text-lg font-black mb-3 sm:mb-4 flex items-center gap-3 ${dm ? "text-white" : "text-slate-900"}`}>
-                      <Info size={18} className="text-indigo-500" /> About this Event
-                    </h3>
-                    <p className={`text-sm font-medium leading-relaxed ${dm ? "text-slate-400" : "text-slate-600"}`}>
-                      {event.description}
-                    </p>
-                  </div>
-                </div>
-              </FadeIn>
+          {loading || !loaded ? (
+            <SkeletonEventDetail darkMode={dm} />
+          ) : !event ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-center font-black text-2xl mb-8">Event Not Found</p>
+              <button 
+                onClick={() => navigate("/")} 
+                className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black shadow-xl transition-all active:scale-95"
+              >
+                Go Back Home
+              </button>
             </div>
-
-            {/* Right Column */}
-            <div className="lg:col-span-4 min-w-0 w-full">
-              <SlideIn from="right" delay={180}>
-                <div
-                  className={`
-                    p-5 sm:p-7 rounded-[22px] sm:rounded-[28px] lg:sticky lg:top-24
-                    ${dm ? "bg-[#1E0B3B] border border-white/5" : "bg-white border border-slate-100 shadow-md"}
-                  `}
-                >
-                  <div className="mb-5 sm:mb-6">
-                    <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Starting from</p>
-                    <div className="flex items-end gap-2">
-                      <span className={`text-3xl sm:text-4xl font-black ${dm ? "text-white" : "text-slate-900"}`}>
-                        ৳{event.price.toLocaleString()}
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10">
+              {/* Left Column */}
+              <div className="lg:col-span-8 space-y-5 sm:space-y-8 min-w-0">
+                <FadeIn delay={0}>
+                  <div className="relative rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl">
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="w-full h-[220px] sm:h-[320px] lg:h-[420px] object-cover"
+                    />
+                    <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6">
+                      <div className="bg-[#0F0121]/75 backdrop-blur-xl px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-white font-black text-xs sm:text-sm border border-white/10 shadow-xl">
+                        ⏱ Starts in 109d 4h
+                      </div>
+                    </div>
+                    <div className="absolute top-4 sm:top-6 left-4 sm:left-6">
+                      <span className="bg-indigo-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-lg">
+                        {event.category}
                       </span>
-                      <span className="text-slate-400 font-bold text-sm mb-1">/ person</span>
                     </div>
                   </div>
+                </FadeIn>
 
-                  <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
-                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest mb-4 sm:mb-5 text-slate-400">Event Details</h3>
-                  <div className="space-y-4 sm:space-y-5 mb-5 sm:mb-7">
-                    <DetailItem icon={<Calendar />} label="Date" value={event.date} dm={dm} />
-                    <DetailItem icon={<Clock />} label="Time" value={event.time} dm={dm} />
-                    <DetailItem icon={<MapPin />} label="Location" value={event.location} dm={dm} />
-                    <DetailItem icon={<Users />} label="Attendees" value={event.attendees} dm={dm} />
+                <FadeIn delay={100}>
+                  <div className="space-y-4 sm:space-y-5">
+                    <h1 className={`text-2xl sm:text-4xl font-black tracking-tight leading-tight ${dm ? "text-white" : "text-slate-900"}`}>
+                      {event.title}
+                    </h1>
+                    <div className={`p-5 sm:p-7 rounded-[20px] sm:rounded-[24px] ${dm ? "bg-[#1E0B3B]" : "bg-white border border-slate-100 shadow-sm"}`}>
+                      <h3 className={`text-base sm:text-lg font-black mb-3 sm:mb-4 flex items-center gap-3 ${dm ? "text-white" : "text-slate-900"}`}>
+                        <Info size={18} className="text-indigo-500" /> About this Event
+                      </h3>
+                      <p className={`text-sm font-medium leading-relaxed ${dm ? "text-slate-400" : "text-slate-600"}`}>
+                        {event.description}
+                      </p>
+                    </div>
                   </div>
+                </FadeIn>
+              </div>
 
-                  <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
-
-                  <button
-                    onClick={() => !isBooked && setShowCheckout(true)}
+              {/* Right Column */}
+              <div className="lg:col-span-4 min-w-0 w-full">
+                <SlideIn from="right" delay={180}>
+                  <div
                     className={`
-                      w-full py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base
-                      transition-all ripple-btn active:scale-95 shadow-lg
-                      flex items-center justify-center gap-2
-                      ${isBooked
-                        ? "bg-emerald-500 text-white shadow-emerald-500/20 cursor-default"
-                        : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
-                      }
+                      p-5 sm:p-7 rounded-[22px] sm:rounded-[28px] lg:sticky lg:top-24
+                      ${dm ? "bg-[#1E0B3B] border border-white/5" : "bg-white border border-slate-100 shadow-md"}
                     `}
                   >
-                    {isBooked
-                      ? <><CheckCircle size={18} /> Ticket Reserved</>
-                      : <><Ticket size={18} /> Reserve Ticket</>
-                    }
-                  </button>
-                  <p className="text-center text-[11px] sm:text-xs text-slate-400 font-medium mt-3">
-                    Free cancellation up to 48hrs before
-                  </p>
-                </div>
-              </SlideIn>
+                    <div className="mb-5 sm:mb-6">
+                      <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Starting from</p>
+                      <div className="flex items-end gap-2">
+                        <span className={`text-3xl sm:text-4xl font-black ${dm ? "text-white" : "text-slate-900"}`}>
+                          ৳{event.price.toLocaleString()}
+                        </span>
+                        <span className="text-slate-400 font-bold text-sm mb-1">/ person</span>
+                      </div>
+                    </div>
+
+                    <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
+                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest mb-4 sm:mb-5 text-slate-400">Event Details</h3>
+                    <div className="space-y-4 sm:space-y-5 mb-5 sm:mb-7">
+                      <DetailItem icon={<Calendar />} label="Date" value={event.date} dm={dm} />
+                      <DetailItem icon={<Clock />} label="Time" value={event.time} dm={dm} />
+                      <DetailItem icon={<MapPin />} label="Location" value={event.location} dm={dm} />
+                    </div>
+
+                    <div className={`h-px mb-5 sm:mb-6 ${dm ? "bg-white/5" : "bg-slate-100"}`} />
+
+                    <button
+                      onClick={() => !isBooked && setShowCheckout(true)}
+                      className={`
+                        w-full py-4 rounded-xl sm:rounded-2xl font-black text-sm sm:text-base
+                        transition-all ripple-btn active:scale-95 shadow-lg
+                        flex items-center justify-center gap-2
+                        ${isBooked
+                          ? "bg-emerald-500 text-white shadow-emerald-500/20 cursor-default"
+                          : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
+                        }
+                      `}
+                    >
+                      {isBooked
+                        ? <><CheckCircle size={18} /> Ticket Reserved</>
+                        : <><Ticket size={18} /> Reserve Ticket</>
+                      }
+                    </button>
+                    <p className="text-center text-[11px] sm:text-xs text-slate-400 font-medium mt-3">
+                      Free cancellation up to 48hrs before
+                    </p>
+                  </div>
+                </SlideIn>
+              </div>
             </div>
-            
-          </div>
+          )}
         </div>
       </main>
 

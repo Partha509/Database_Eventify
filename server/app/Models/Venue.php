@@ -9,6 +9,7 @@ class Venue extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
     protected $primaryKey = 'venue_id';
 
     protected $fillable = [

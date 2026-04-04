@@ -9,6 +9,7 @@ class Ticket extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
     protected $primaryKey = 'ticket_id';
 
     protected $fillable = [
