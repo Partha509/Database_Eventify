@@ -16,6 +16,7 @@ import {
 } from "../components/ui";
 
 import ApiClient from "../api";
+import { secrets } from "../secrets";
 
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -23,72 +24,6 @@ import ApiClient from "../api";
 const CATEGORIES = [
   "All", "Music", "Tech", "Business", "Sports",
   "Art", "Food", "Wellness", "Comedy",
-];
-
-const FEATURED_EVENTS = [
-  {
-    id: 1,
-    title: "Summer Music Festival 2026",
-    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80",
-    price: 89,
-    date: "Jun 15, 2026",
-    location: "Golden Gate Park, SF",
-    category: "Music",
-  },
-  {
-    id: 2,
-    title: "Tech Summit 2026",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80",
-    price: 299,
-    date: "Jul 22, 2026",
-    location: "Moscone Center, SF",
-    category: "Tech",
-  },
-  {
-    id: 3,
-    title: "Championship Game Night",
-    image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80",
-    price: 125,
-    date: "Aug 05, 2026",
-    location: "Oracle Park, SF",
-    category: "Sports",
-  },
-  {
-    id: 4,
-    title: "International Food Gala",
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80",
-    price: 85,
-    date: "Aug 10, 2026",
-    location: "Ferry Building, SF",
-    category: "Food",
-  },
-  {
-    id: 5,
-    title: "Modern Art Exhibition",
-    image: "https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=1200&q=80",
-    price: 40,
-    date: "Sep 01, 2026",
-    location: "SFMOMA, SF",
-    category: "Art",
-  },
-];
-
-const ALL_UPCOMING = [
-  { id: 6, title: "Rock Legends Live", image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80", price: 125, date: "2026-08-05", category: "Music" },
-  { id: 7, title: "AI Expo 2026", image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80", price: 199, date: "2026-04-18", category: "Tech" },
-  { id: 8, title: "World Cup Qualifier", image: "https://static.independent.co.uk/2025/03/05/12/43/GettyImages-2200004063.jpeg?crop=1024,682.7,x0,y0.2&trim=0,0,0,0&width=1200", price: 500, date: "2026-09-12", category: "Sports" },
-  { id: 9, title: "Startup Pitch Night", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80", price: 50, date: "2026-02-28", category: "Business" },
-  { id: 10, title: "Jazz Night", image: "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80", price: 65, date: "2026-05-20", category: "Music" },
-  { id: 11, title: "Street Food Festival", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80", price: 25, date: "2026-06-01", category: "Food" },
-  { id: 12, title: "Yoga & Mindfulness Expo", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80", price: 55, date: "2026-06-20", category: "Wellness" },
-  { id: 13, title: "Stand-Up Comedy Night", image: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&q=80", price: 45, date: "2026-07-04", category: "Comedy" },
-  { id: 14, title: "Blockchain World Forum", image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80", price: 249, date: "2026-07-15", category: "Tech" },
-  { id: 15, title: "Tennis Open 2026", image: "https://images.unsplash.com/photo-1542144582-1ba00456b5e3?w=800&q=80", price: 110, date: "2026-08-22", category: "Sports" },
-  { id: 16, title: "Abstract Art Showcase", image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80", price: 35, date: "2026-09-01", category: "Art" },
-  { id: 17, title: "Mental Health Summit", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80", price: 60, date: "2026-09-05", category: "Wellness" },
-  { id: 18, title: "Improv Comedy Festival", image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80", price: 55, date: "2026-09-18", category: "Comedy" },
-  { id: 19, title: "Business Networking Mixer", image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=800&q=80", price: 45, date: "2026-05-10", category: "Business" },
-  { id: 20, title: "Electronic Music Night", image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&q=80", price: 90, date: "2026-06-28", category: "Music" },
 ];
 
 const NOTIFICATIONS = [
@@ -144,8 +79,8 @@ const getGlobalStyles = (priceRange, darkMode) => `
     height: 6px;
     background: linear-gradient(
       to right,
-      #6366f1 ${(priceRange / 1000) * 100}%,
-      ${darkMode ? "#1E0B3B" : "#f1f5f9"} ${(priceRange / 1000) * 100}%
+      #6366f1 ${(priceRange / 1000000) * 100}%,
+      ${darkMode ? "#1E0B3B" : "#f1f5f9"} ${(priceRange / 1000000) * 100}%
     );
     border-radius: 10px;
   }
@@ -356,7 +291,7 @@ function EventCard({ event, darkMode, navigate, index = 0, extraClass = "event-c
             ${darkMode ? "bg-[#0F0121]/80 text-white" : "bg-white/90 text-slate-900"}
           `}
         >
-          <span className="font-black text-sm sm:text-base">${event.price}</span>
+          <span className="font-black text-sm sm:text-base">BDT {event.price}</span>
         </div>
       </div>
 
@@ -970,7 +905,7 @@ function HeroSection({ darkMode, navigate, setIsSearchActive }) {
 
 // ─── Featured Carousel ────────────────────────────────────────────────────────
 
-function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
+function FeaturedEvents({ darkMode, navigate, isSearchActive, featuredEvents }) {
   const [current, setCurrent] = useState(0);
   const [sliding, setSliding] = useState(false);
   const [direction, setDirection] = useState("next");
@@ -978,7 +913,7 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
   const slidingRef = useRef(false);
   const currentRef = useRef(0);
   const touchStartX = useRef(null);
-  const total = FEATURED_EVENTS.length;
+  const total = featuredEvents.length;
 
   useEffect(() => { currentRef.current = current; }, [current]);
 
@@ -1028,7 +963,8 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
     startTimer();
   };
 
-  const event = FEATURED_EVENTS[current];
+  const event = featuredEvents[current];
+  if (!event) return null;
 
   return (
     <section
@@ -1139,7 +1075,7 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
               <div className="flex items-center gap-5 sm:gap-10">
                 <div>
                   <p className="text-[9px] sm:text-[10px] uppercase font-black text-indigo-400 tracking-widest">Price</p>
-                  <span className="text-2xl sm:text-4xl font-black">${event.price}</span>
+                  <span className="text-2xl sm:text-4xl font-black">BDT {event.price}</span>
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-[10px] uppercase font-black text-indigo-400 tracking-widest">Date</p>
@@ -1166,7 +1102,7 @@ function FeaturedEvents({ darkMode, navigate, isSearchActive }) {
 
         {/* Dots */}
         <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2 z-20">
-          {FEATURED_EVENTS.map((_, i) => (
+          {featuredEvents.map((_, i) => (
             <button
               key={i}
               onClick={(e) => { e.stopPropagation(); goTo(i, i > current ? "next" : "prev"); }}
@@ -1299,6 +1235,7 @@ function SearchOverlay({
   startDate, setStartDate,
   endDate, setEndDate,
   setSearchQuery,
+  isLoading,
 }) {
   if (!isSearchActive) return null;
 
@@ -1393,21 +1330,21 @@ function SearchOverlay({
           <div className="space-y-4 sm:space-y-5">
             <div className="flex justify-between items-center">
               <label className="text-[11px] font-black uppercase text-indigo-500 tracking-[0.2em]">Price Cap</label>
-              <span className="text-indigo-400 font-black text-base sm:text-lg">${priceRange}</span>
+              <span className="text-indigo-400 font-black text-base sm:text-lg">BDT {priceRange}</span>
             </div>
             <input
-              type="range" min="0" max="1000" value={priceRange}
+              type="range" min="0" max="1000000" value={priceRange}
               onChange={(e) => setPriceRange(Number(e.target.value))}
               className="w-full cursor-pointer h-2 bg-indigo-100 rounded-lg appearance-none"
             />
             <div className="flex justify-between items-center pt-1 sm:pt-2">
               <button
-                onClick={() => { setPriceRange(1000); setStartDate(""); setEndDate(""); setSelectedCategory("All"); setSearchQuery(""); }}
+                onClick={() => { setPriceRange(1000000); setStartDate(""); setEndDate(""); setSelectedCategory("All"); setSearchQuery(""); }}
                 className="text-xs font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-400"
               >
                 Clear All
               </button>
-              <span className="text-[10px] font-bold text-slate-400">0 – 1000 USD</span>
+              <span className="text-[10px] font-bold text-slate-400">0 – 1,000,000 BDT</span>
             </div>
           </div>
         </div>
@@ -1422,7 +1359,9 @@ function SearchOverlay({
         )}
       </p>
 
-      {filteredEvents.length === 0 ? (
+      {isLoading ? (
+        <SkeletonEventGrid darkMode={darkMode} count={3} />
+      ) : filteredEvents.length === 0 ? (
         <div className={`flex flex-col items-center justify-center py-16 sm:py-24 rounded-[32px] sm:rounded-[48px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-100"}`}>
           <SearchX size={44} className="text-slate-300 mb-5" />
           <p className={`text-lg font-black ${darkMode ? "text-slate-400" : "text-slate-500"}`}>No events found</p>
@@ -1664,12 +1603,50 @@ export default function Eventpage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState(1000);
+  const [priceRange, setPriceRange] = useState(1000000);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
+
+  const [dynamicEvents, setDynamicEvents] = useState([]);
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const api = new ApiClient();
+        const evts = await api.getEvents();
+        if (evts && Array.isArray(evts)) {
+          const mapped = evts.map(e => ({
+            id: e.event_id,
+            title: e.event_name,
+            description: e.description,
+            date: e.start_date_time ? e.start_date_time.split(' ')[0] : "2026-06-15",
+            time: e.start_date_time && e.start_date_time.includes(' ') ? e.start_date_time.split(' ')[1] : '',
+            category: e.category?.category_name || "General",
+            location: e.venue?.location || "TBD",
+            price: e.tickets && e.tickets.length > 0 ? e.tickets[0].price : 0,
+            image: e.image_url 
+              ? `${secrets.backendEndpoint}/storage/${e.image_url}` 
+              : "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1200&q=80"
+          }));
+          
+          if (mapped.length > 0) {
+            setDynamicEvents(mapped);
+            setFeaturedEvents(mapped.slice(0, 5));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch events", err);
+      } finally {
+        setIsEventsLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
 
   const userInitials = useMemo(() => {
     if (!user) return null;
@@ -1682,7 +1659,7 @@ export default function Eventpage() {
   }, [user]);
 
   const filteredEvents = useMemo(() => {
-    return ALL_UPCOMING.filter((event) => {
+    return dynamicEvents.filter((event) => {
       const matchesCategory = selectedCategory === "All" || event.category === selectedCategory;
       const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPrice = event.price <= priceRange;
@@ -1691,7 +1668,7 @@ export default function Eventpage() {
       const matchesEnd = !endDate || eventDate <= new Date(endDate);
       return matchesCategory && matchesSearch && matchesPrice && matchesStart && matchesEnd;
     });
-  }, [selectedCategory, searchQuery, priceRange, startDate, endDate]);
+  }, [selectedCategory, searchQuery, priceRange, startDate, endDate, dynamicEvents]);
 
   return (
     <div
@@ -1747,10 +1724,11 @@ export default function Eventpage() {
           startDate={startDate} setStartDate={setStartDate}
           endDate={endDate} setEndDate={setEndDate}
           setSearchQuery={setSearchQuery}
+          isLoading={isEventsLoading}
         />
 
         {/* Show skeletons while loading, real content after */}
-        {!loaded ? (
+        {!loaded || isEventsLoading ? (
           <div className="space-y-10 sm:space-y-16">
             <SkeletonCarousel darkMode={darkMode} />
             <SkeletonEventGrid darkMode={darkMode} count={6} />
@@ -1772,6 +1750,7 @@ export default function Eventpage() {
               <FeaturedEvents
                 darkMode={darkMode} navigate={navigate}
                 isSearchActive={isSearchActive}
+                featuredEvents={featuredEvents}
               />
             </FadeIn>
             <FadeIn delay={120}>

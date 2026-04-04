@@ -20,7 +20,7 @@ import {
 const STATS = [
   { id: 1, label: "Total Events", value: "12", icon: <TrendingUp size={24} /> },
   { id: 2, label: "Total Attendees", value: "2,847", icon: <Users size={24} /> },
-  { id: 3, label: "Total Revenue", value: "$18,420", icon: <DollarSign size={24} /> },
+  { id: 3, label: "Total Revenue", value: "BDT 18,420", icon: <DollarSign size={24} /> },
   { id: 4, label: "Total Views", value: "15,634", icon: <Eye size={24} /> },
 ];
 
@@ -32,10 +32,10 @@ const HOSTED_EVENTS = [
     date: "Jun 15",
     location: "Golden Gate Park, San Francisco",
     attendees: "2547+",
-    revenue: "$226,683",
+    revenue: "BDT 226,683",
     growth: "+15%",
     category: "Music",
-    price: "$89",
+    price: "BDT 89",
     organizer: "Music Collective",
   },
   {
@@ -45,10 +45,10 @@ const HOSTED_EVENTS = [
     date: "Jul 22",
     location: "Moscone Center, San Francisco",
     attendees: "1847+",
-    revenue: "$552,253",
+    revenue: "BDT 552,253",
     growth: "+15%",
     category: "Tech",
-    price: "$299",
+    price: "BDT 299",
     organizer: "Tech Innovators",
   },
   {
@@ -58,10 +58,10 @@ const HOSTED_EVENTS = [
     date: "May 10",
     location: "The Ritz-Carlton, San Francisco",
     attendees: "324+",
-    revenue: "$14,580",
+    revenue: "BDT 14,580",
     growth: "+15%",
     category: "Business",
-    price: "$45",
+    price: "BDT 45",
     organizer: "BizConnect",
   },
 ];

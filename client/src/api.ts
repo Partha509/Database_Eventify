@@ -16,6 +16,7 @@ export interface Event {
   event_name: string;
   description: string;
   start_date_time: string;
+  image_url?: string;
 }
 
 class ApiClient {
@@ -27,7 +28,10 @@ class ApiClient {
 
     this.client = axios.create({
       baseURL: secrets.backendEndpoint,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
     });
 
     if (this.token) {
@@ -141,12 +145,16 @@ class ApiClient {
     }
   }
 
-  async createEvent(event_name: string, description: string, start_date_time: string) {
+  async createEvent(event_name: string, description: string, start_date_time: string, venue: string, category: string, price: number | string, image_base64?: string) {
     try {
       const response = await this.client.post("/api/events", {
         event_name,
         description,
-        start_date_time
+        start_date_time,
+        venue,
+        category,
+        price,
+        image_base64: image_base64 || null
       });
 
       toast.success("Event created successfully");

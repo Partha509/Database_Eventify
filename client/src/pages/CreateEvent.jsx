@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useMemo } from "react";
+import React, { useState, useContext, useRef, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../App";
 import { AuthContext } from "../context/AuthContext";
@@ -34,6 +34,155 @@ function LogoIcon() {
         fill="white" stroke="white" strokeWidth="0.5"
       />
     </svg>
+  );
+}
+
+// ─── Input Wrapper ────────────────────────────────────────────────────────────
+// FIXED: Moved outside CreateEvent so React doesn't remount inputs on every render
+
+function InputWrapper({ children, label, icon, required, darkMode }) {
+  return (
+    <div className="space-y-2 sm:space-y-3">
+      <label className={`text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
+        {icon && React.cloneElement(icon, { size: 13, className: "text-indigo-500" })}
+        {label}
+        {required && <span className="text-rose-500">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+// ─── Venue Autocomplete (Nominatim / OpenStreetMap — free, no API key) ────────
+
+function VenueAutocomplete({ value, onChange, inputClasses, darkMode }) {
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef(null);
+  const wrapperRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchSuggestions = useCallback(async (query) => {
+    if (!query || query.trim().length < 2) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      // countrycodes=bd biases results toward Bangladesh
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=bd&format=json&addressdetails=1&limit=6`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data = await res.json();
+      const formatted = data.map((item) => ({
+        id: item.place_id,
+        display: item.display_name,
+        // Build a clean short label from address parts
+        short: [
+          item.address?.amenity || item.address?.building,
+          item.address?.road || item.address?.suburb || item.address?.neighbourhood,
+          item.address?.city || item.address?.town || item.address?.county,
+          item.address?.state,
+        ]
+          .filter(Boolean)
+          .join(", "),
+      }));
+      setSuggestions(formatted);
+      setShowDropdown(formatted.length > 0);
+    } catch (err) {
+      console.error("Nominatim fetch failed:", err);
+      setSuggestions([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    onChange(val);
+    // Debounce 400ms — Nominatim has a usage policy; don't spam it
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchSuggestions(val), 400);
+  };
+
+  const handleSelect = (suggestion) => {
+    onChange(suggestion.short || suggestion.display);
+    setSuggestions([]);
+    setShowDropdown(false);
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          name="location"
+          value={value}
+          onChange={handleChange}
+          onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+          placeholder="Search venue or area in Bangladesh..."
+          className={inputClasses}
+          autoComplete="off"
+          required
+        />
+        {/* Spinner while fetching */}
+        {isSearching && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      {/* Suggestions dropdown */}
+      {showDropdown && suggestions.length > 0 && (
+        <ul
+          className={`
+            absolute z-50 w-full mt-2 rounded-2xl border overflow-hidden shadow-2xl
+            ${darkMode
+              ? "bg-[#1E0B3B] border-white/10 shadow-black/40"
+              : "bg-white border-slate-100 shadow-slate-200/80"
+            }
+          `}
+        >
+          {suggestions.map((s) => (
+            <li
+              key={s.id}
+              onMouseDown={() => handleSelect(s)}
+              className={`
+                flex items-start gap-3 px-5 py-3 cursor-pointer transition-colors
+                ${darkMode
+                  ? "hover:bg-indigo-600/20 border-b border-white/5 last:border-0"
+                  : "hover:bg-indigo-50 border-b border-slate-50 last:border-0"
+                }
+              `}
+            >
+              <MapPin size={14} className="text-indigo-500 mt-1 shrink-0" />
+              <div className="min-w-0">
+                <p className={`text-sm font-bold truncate ${darkMode ? "text-white" : "text-slate-800"}`}>
+                  {s.short || s.display}
+                </p>
+                <p className={`text-xs truncate mt-0.5 ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
+                  {s.display}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -151,6 +300,11 @@ export default function CreateEvent() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Dedicated handler for the venue autocomplete
+  const handleVenueChange = (value) => {
+    setFormData((prev) => ({ ...prev, location: value }));
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("image/")) return;
@@ -188,15 +342,38 @@ export default function CreateEvent() {
     }
   };
 
-  const handlePublish = (e) => {
+  const handlePublish = async (e) => {
     e.preventDefault();
     const required = ["title", "category", "date", "location", "description"];
     const missing = required.filter((f) => !formData[f]);
-    if (missing.length > 0 || !coverImage) {
-      return alert("Please fill in all required fields (*) and upload a cover image.");
+    if (missing.length > 0) {
+      return alert("Please fill in all required fields (*).");
     }
-    alert("Event Published Successfully!");
-    navigate("/");
+    
+    const start_date_time = `${formData.date} ${formData.time || "00:00:00"}`;
+    
+    try {
+      const api = new ApiClient();
+      const createdEvent = await api.createEvent(
+        formData.title,
+        formData.description,
+        start_date_time,
+        formData.location,
+        formData.category,
+        formData.price ? parseFloat(formData.price) : 0,
+        imagePreview || null
+      );
+
+      if (createdEvent && createdEvent.success !== false) {
+        alert("Event Published Successfully!");
+        navigate("/");
+      } else {
+        alert("Event creation failed: the backend returned an empty response. Check console/logs.");
+      }
+    } catch (err) {
+      alert("Error occurred while publishing event: " + err.message);
+      console.error(err);
+    }
   };
 
   // ── Shared input styles ────────────────────────────────────────────────────
@@ -210,19 +387,6 @@ export default function CreateEvent() {
       : "bg-white border-slate-100 text-slate-900 placeholder:text-slate-400"
     }
   `;
-
-  // ── Input wrapper ──────────────────────────────────────────────────────────
-
-  const InputWrapper = ({ children, label, icon, required }) => (
-    <div className="space-y-2 sm:space-y-3">
-      <label className={`text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 ${darkMode ? "text-slate-400" : "text-slate-500"}`}>
-        {icon && React.cloneElement(icon, { size: 13, className: "text-indigo-500" })}
-        {label}
-        {required && <span className="text-rose-500">*</span>}
-      </label>
-      {children}
-    </div>
-  );
 
   return (
     <div className={`flex min-h-screen w-full transition-colors duration-500 font-sans ${darkMode ? "bg-[#0F0121] text-white" : "bg-[#F8FAFC] text-slate-900"}`}>
@@ -320,7 +484,7 @@ export default function CreateEvent() {
                 {/* Cover image */}
                 <FadeIn delay={80}>
                   <div className={`p-5 sm:p-10 rounded-[32px] sm:rounded-[48px] ${darkMode ? "bg-[#1E0B3B]" : "bg-white border border-slate-50"}`}>
-                    <InputWrapper label="Cover Image" icon={<PartyPopper />} required>
+                    <InputWrapper label="Cover Image" icon={<PartyPopper />} required darkMode={darkMode}>
                       <div
                         onClick={() => fileInputRef.current.click()}
                         className={`
@@ -385,42 +549,47 @@ export default function CreateEvent() {
 
                       {/* Title */}
                       <div className="sm:col-span-2">
-                        <InputWrapper label="Event Title" icon={<Type />} required>
+                        <InputWrapper label="Event Title" icon={<Type />} required darkMode={darkMode}>
                           <input type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="Enter a catchy event name" className={inputClasses} required />
                         </InputWrapper>
                       </div>
 
                       {/* Category */}
-                      <InputWrapper label="Category" icon={<PartyPopper />} required>
+                      <InputWrapper label="Category" icon={<PartyPopper />} required darkMode={darkMode}>
                         <select name="category" value={formData.category} onChange={handleInputChange} className={`${inputClasses} appearance-none`} required>
                           <option value="" disabled>Select category</option>
                           {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                       </InputWrapper>
 
-                      {/* Location */}
-                      <InputWrapper label="Location" icon={<MapPin />} required>
-                        <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="Event address" className={inputClasses} required />
+                      {/* Venue — Nominatim autocomplete */}
+                      <InputWrapper label="Venue" icon={<MapPin />} required darkMode={darkMode}>
+                        <VenueAutocomplete
+                          value={formData.location}
+                          onChange={handleVenueChange}
+                          inputClasses={inputClasses}
+                          darkMode={darkMode}
+                        />
                       </InputWrapper>
 
                       {/* Date */}
-                      <InputWrapper label="Date" icon={<CalendarDays />} required>
+                      <InputWrapper label="Date" icon={<CalendarDays />} required darkMode={darkMode}>
                         <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={inputClasses} required />
                       </InputWrapper>
 
                       {/* Time */}
-                      <InputWrapper label="Time" icon={<Clock3 />}>
+                      <InputWrapper label="Time" icon={<Clock3 />} darkMode={darkMode}>
                         <input type="time" name="time" value={formData.time} onChange={handleInputChange} className={inputClasses} />
                       </InputWrapper>
 
-                      {/* Price */}
-                      <InputWrapper label="Ticket Price (USD)" icon={<DollarSign />}>
+                      {/* Price — BDT */}
+                      <InputWrapper label="Ticket Price (BDT)" icon={<DollarSign />} darkMode={darkMode}>
                         <input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00" min="0" step="0.01" className={inputClasses} />
                       </InputWrapper>
 
                       {/* Description */}
                       <div className="sm:col-span-2">
-                        <InputWrapper label="Event Description" required>
+                        <InputWrapper label="Event Description" required darkMode={darkMode}>
                           <textarea
                             name="description"
                             value={formData.description}
