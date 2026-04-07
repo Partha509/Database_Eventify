@@ -5,6 +5,7 @@ import {
   Shield, CheckCircle, MapPin 
 } from "lucide-react";
 import { QRCodeSVG } from 'qrcode.react';
+import { secrets } from '../secrets';
 
 const CheckoutPanel = ({ event, dm, onClose, onConfirmed }) => {
   const [quantity, setQuantity] = useState(1);
@@ -54,7 +55,7 @@ const CheckoutPanel = ({ event, dm, onClose, onConfirmed }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/bkash/create', {
+      const response = await axios.post(`${secrets.backendEndpoint}/api/bkash/create`, {
         amount: total,
         ticket_id: event.id,
         customer_name: details.name,
