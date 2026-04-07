@@ -32,7 +32,6 @@ services:
       - database
     volumes:
       - ./server:/app
-      - ./database:/app/database
       - server_vendor:/app/vendor
     environment:
       DB_CONNECTION: mysql
