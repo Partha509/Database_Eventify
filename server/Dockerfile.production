@@ -1,16 +1,10 @@
-FROM php:8.1-apache
+FROM php:8.1-cli
 
 #Install system dependencies & PHP extensions
 RUN apt-get update && apt-get install -y \
     libpng-dev libonig-dev libxml2-dev zip unzip git curl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-#FORCE FIX MPM: Manually delete conflicting modules and enforce prefork
-RUN rm -f /etc/apache2/mods-enabled/mpm_worker.* \
-    && rm -f /etc/apache2/mods-enabled/mpm_event.* \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite
 
 #Setup Composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -27,17 +21,11 @@ RUN composer install --no-interaction --optimize-autoloader --ignore-platform-re
 
 #Create missing directories and fix permissions for Laravel
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/framework/views storage/logs bootstrap/cache \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache
 
-#Point Apache to Laravel's "public" folder
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-#Railway Port Binding (With Default 8080 Fallback)
+#Railway Port Binding
 ENV PORT=8080
-RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf \
-    && sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
-
 EXPOSE ${PORT}
+
+#Start Laravel's built-in server on the dynamic Railway port
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
