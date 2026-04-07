@@ -1,7 +1,7 @@
 // src/secrets.ts
 
 export const secrets = {
-  backendEndpoint: "http://localhost:8000", // Change 127.0.0.1 to localhost
+  backendEndpoint: import.meta.env.VITE_BACKEND_ENDPOINT || "http://localhost:8000",
   headers: {
     "Content-Type": "application/json",
   },
