@@ -13,6 +13,14 @@ class Event extends Model
     
     public $timestamps = false;
 
+    protected $appends = ['price'];
+
+    public function getPriceAttribute()
+    {
+        $ticket = $this->tickets->first();
+        return $ticket ? (float) $ticket->price : 0;
+    }
+
     protected $fillable = [
         'event_name',
         'description',

@@ -1,27 +1,24 @@
 services:
   database:
-    image: mysql:8.0
+    image: mcr.microsoft.com/mssql/server:2022-latest
     restart: always
     environment:
-      MYSQL_DATABASE: event_management
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: rootpassword
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: Eventify@DB2026!
     ports:
-      - "3307:3306"
+      - "1433:1433"
     volumes:
-      - ./database/migrations:/docker-entrypoint-initdb.d
-      - mysql_data:/var/lib/mysql
+      - mssql_data:/var/opt/mssql
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    ports:
-      - "8082:80"
-    environment:
-      PMA_HOST: database
-      MYSQL_ROOT_PASSWORD: rootpassword
+  database-setup:
+    image: mcr.microsoft.com/mssql-tools
     depends_on:
       - database
+    command: >
+      bash -c '
+      sleep 15;
+      /opt/mssql-tools/bin/sqlcmd -S database -U sa -P "Eventify@DB2026!" -Q "IF DB_ID('\''event_management'\'') IS NULL CREATE DATABASE event_management;"
+      '
 
   server:
     build:
@@ -30,18 +27,19 @@ services:
       - "8000:8000"
     depends_on:
       - database
+      - database-setup
     volumes:
       - ./server:/app
       - server_vendor:/app/vendor
     environment:
-      DB_CONNECTION: mysql
+      DB_CONNECTION: sqlsrv
       DB_HOST: database
-      DB_PORT: 3306
+      DB_PORT: 1433
       DB_DATABASE: event_management
-      DB_USERNAME: user
-      DB_PASSWORD: password
+      DB_USERNAME: sa
+      DB_PASSWORD: Eventify@DB2026!
       APP_URL: http://localhost:8000
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:5173
 
   client:
     build:
@@ -61,5 +59,5 @@ services:
       - CHOKIDAR_USEPOLLING=true
 
 volumes:
-  mysql_data:
+  mssql_data:
   server_vendor:
