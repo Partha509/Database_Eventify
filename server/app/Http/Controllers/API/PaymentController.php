@@ -70,7 +70,7 @@ class PaymentController extends Controller
 
         // CANCELLATION: User manually closed the bKash window -> TREAT AS FAIL
         if ($status == 'cancel') {
-            return redirect(env('FRONTEND_URL', 'http://localhost:3000') . "/payment/failed?reason=cancelled");
+            return redirect(env('FRONTEND_URL', 'http://localhost:5173') . "/payment/failed?reason=cancelled");
         }
 
         //WALLET LOCKED: bKash forces a failure redirect -> TREAT AS SUCCESS
@@ -102,7 +102,7 @@ class PaymentController extends Controller
         }
 
         // Any other unknown state -> TREAT AS FAIL
-        return redirect(env('FRONTEND_URL', 'http://localhost:3000') . "/payment/failed?reason=unknown_error");
+        return redirect(env('FRONTEND_URL', 'http://localhost:5173') . "/payment/failed?reason=unknown_error");
     }
 
     // --- Helper Function to keep database logic clean ---
@@ -126,7 +126,7 @@ class PaymentController extends Controller
         $booking->update(['payment_id' => $payment->payment_id]);
 
         // Redirect to React
-        $frontend = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontend = env('FRONTEND_URL', 'http://localhost:5173');
         return redirect("{$frontend}/payment/success?booking_id={$booking->booking_id}&trx_id={$trx_id}");
     }
 }
