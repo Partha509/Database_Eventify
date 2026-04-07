@@ -28,4 +28,4 @@ ENV PORT=8080
 EXPOSE ${PORT}
 
 #Start Laravel's built-in server on the dynamic Railway port
-CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT}
