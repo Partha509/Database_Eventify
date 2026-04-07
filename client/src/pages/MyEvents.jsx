@@ -14,7 +14,7 @@ const api = new ApiClient();
 
 import {
 
-  Calendar, MapPin, Users, DollarSign, Eye,
+  Calendar, MapPin, Users, DollarSign,
 
   TrendingUp, LayoutDashboard, PlusSquare, User,
 
@@ -44,17 +44,7 @@ import {
 
 // ─── Static Data (Fallback) ──────────────────────────────────────────────────
 
-const STATS = [
-
-  { id: 1, label: "Total Events", value: "12", icon: <TrendingUp size={24} /> },
-
-  { id: 2, label: "Total Attendees", value: "2,847", icon: <Users size={24} /> },
-
-  { id: 3, label: "Total Revenue", value: "$18,420", icon: <DollarSign size={24} /> },
-
-  { id: 4, label: "Total Views", value: "15,634", icon: <Eye size={24} /> },
-
-];
+// Stats are now loaded from the API dynamically
 
 
 
@@ -307,64 +297,61 @@ export default function MyEvents() {
 
 
   // Database States
-
   const [myEvents, setMyEvents] = useState([]);
-
+  const [attendingEvents, setAttendingEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hostingStats, setHostingStats] = useState({ total_events: 0, total_attendees: 0, total_revenue: 0 });
+  const [attendingStats, setAttendingStats] = useState({ total_events: 0, total_attendees: 0, total_cost: 0 });
 
-
-
-  // ── Smart initials with useMemo (from previous code) ──────────────────────
-
+  // ── Smart initials with useMemo ────────────────────────────────────────────
   const userInitials = useMemo(() => {
-
     if (!user) return null;
-
     const name = user.user_name || user.fullName || "";
-
     const parts = name.trim().split(" ");
-
-    const initials =
-
-      parts.length >= 2
-
-        ? parts[0][0] + parts[parts.length - 1][0]
-
-        : name.slice(0, 2);
-
+    const initials = parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : name.slice(0, 2);
     return initials.toUpperCase() || "?";
-
   }, [user]);
 
-
-
   // Fetch Data from DB
-
   useEffect(() => {
-
     const fetchMyEvents = async () => {
-
       try {
+        // Hosting events — filter by user_id on client side since API returns all
+        const [eventsRes, attendingRes, hostingStatsRes, attendingStatsRes] = await Promise.all([
+          api.client.get("/api/events"),
+          api.client.get("/api/user/my-tickets"),
+          api.client.get("/api/user/hosting-stats"),
+          api.client.get("/api/user/attending-stats"),
+        ]);
 
-        const response = await api.client.get("/api/events");
+        // Filter events hosted by the logged-in user
+        const allEvents = eventsRes.data;
+        const userId = user?.id || user?.user_id;
+        const hosted = userId
+          ? allEvents.filter(e => String(e.user_id) === String(userId))
+          : allEvents;
+        setMyEvents(hosted);
 
-        setMyEvents(response.data);
+        // Map attending bookings — use booking_id as unique key
+        const mappedAttending = attendingRes.data.map(b => ({
+          ...(b.ticket?.event || {}),
+          booking_id: b.booking_id,
+          ticket_price: b.payment?.pay_amount || b.ticket?.price || 0,
+          growth: "Confirmed",
+        }));
+        setAttendingEvents(mappedAttending);
 
+        setHostingStats(hostingStatsRes.data);
+        setAttendingStats(attendingStatsRes.data);
       } catch (err) {
-
         console.error("Failed to fetch events:", err);
-
       } finally {
-
         setIsLoading(false);
-
       }
-
     };
 
     fetchMyEvents();
-
-  }, []);
+  }, [user]);
 
 
 
@@ -388,7 +375,20 @@ export default function MyEvents() {
 
 
 
-  const displayEvents = activeTab === "hosting" ? myEvents : HOSTED_EVENTS;
+  const displayEvents = activeTab === "hosting" ? myEvents : attendingEvents;
+
+  // Dynamic stat cards per tab
+  const activeStats = activeTab === "hosting"
+    ? [
+        { id: "h1", label: "Total Events", value: String(hostingStats.total_events), icon: <TrendingUp size={24} /> },
+        { id: "h2", label: "Total Attendees", value: String(hostingStats.total_attendees), icon: <Users size={24} /> },
+        { id: "h3", label: "Total Revenue", value: `৳${Number(hostingStats.total_revenue).toLocaleString()}`, icon: <DollarSign size={24} /> },
+      ]
+    : [
+        { id: "a1", label: "Total Events", value: String(attendingStats.total_events), icon: <TrendingUp size={24} /> },
+        { id: "a2", label: "Total Attendees", value: String(attendingStats.total_attendees), icon: <Users size={24} /> },
+        { id: "a3", label: "Total Cost", value: `৳${Number(attendingStats.total_cost).toLocaleString()}`, icon: <DollarSign size={24} /> },
+      ];
 
 
 
@@ -470,34 +470,21 @@ export default function MyEvents() {
 
 
 
-        {/* Stats Grid */}
-
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
-
-          {STATS.map((stat, i) => (
-
-            !loaded ? <SkeletonStatCard key={stat.id} darkMode={darkMode} gradient={stat.id === 1} /> :
-
-              <FadeIn key={stat.id} delay={i * 80}>
-
-                <div className={`p-5 sm:p-8 rounded-[28px] border transition-all hover:-translate-y-2 ${stat.id === 1 ? "bg-gradient-to-br from-indigo-600 to-blue-500 border-transparent" : darkMode ? "bg-[#1E0B3B] border-white/5" : "bg-white border-slate-100"}`}>
-
-                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 ${stat.id === 1 ? "bg-white/20 text-white" : darkMode ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-50 text-indigo-600"}`}>
-
-                    {React.cloneElement(stat.icon, { size: 20 })}
-
+        {/* Stats Grid — live from DB */}
+        <div className="grid grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+          {activeStats.map((stat, i) => (
+            !loaded || isLoading
+              ? <SkeletonStatCard key={stat.id} darkMode={darkMode} gradient={i === 0} />
+              : <FadeIn key={stat.id} delay={i * 80}>
+                  <div className={`p-5 sm:p-8 rounded-[28px] border transition-all hover:-translate-y-2 ${i === 0 ? "bg-gradient-to-br from-indigo-600 to-blue-500 border-transparent" : darkMode ? "bg-[#1E0B3B] border-white/5" : "bg-white border-slate-100"}`}>
+                    <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 ${i === 0 ? "bg-white/20 text-white" : darkMode ? "bg-indigo-500/20 text-indigo-400" : "bg-indigo-50 text-indigo-600"}`}>
+                      {React.cloneElement(stat.icon, { size: 20 })}
+                    </div>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${i === 0 ? "text-indigo-100" : "text-slate-400"}`}>{stat.label}</p>
+                    <h3 className="text-2xl sm:text-4xl font-black"><CountUp value={stat.value} delay={i * 120} duration={1200} /></h3>
                   </div>
-
-                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${stat.id === 1 ? "text-indigo-100" : "text-slate-400"}`}>{stat.label}</p>
-
-                  <h3 className="text-2xl sm:text-4xl font-black"><CountUp value={stat.value} delay={i * 120} duration={1200} /></h3>
-
-                </div>
-
-              </FadeIn>
-
+                </FadeIn>
           ))}
-
         </div>
 
 
@@ -535,8 +522,7 @@ export default function MyEvents() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
 
             {displayEvents.map((event, i) => (
-
-              <InViewFade key={event.id || event.event_id} delay={i * 100}>
+              <InViewFade key={activeTab === "attending" ? `booking-${event.booking_id}-${i}` : `event-${event.event_id || i}`} delay={i * 100}>
 
                 <div className={`group rounded-[36px] overflow-hidden transition-all duration-500 border ${darkMode ? "bg-[#1E0B3B] border-white/5" : "bg-white border-slate-100 shadow-sm"} hover:-translate-y-2`}>
 
@@ -579,11 +565,17 @@ export default function MyEvents() {
                     <div className={`pt-8 border-t flex items-center justify-between ${darkMode ? "border-white/5" : "border-slate-50"}`}>
 
                       <div>
-
-                        <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest"><TrendingUp size={11} className="inline mr-1" />{event.growth || "+0%"}</div>
-
-                        <div className="text-lg sm:text-2xl font-black text-emerald-500">${(event.ticket_price * (event.attendees_count || 0)).toLocaleString()}</div>
-
+                        {activeTab === "hosting" ? (
+                          <>
+                            <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest"><TrendingUp size={11} className="inline mr-1" />{event.growth || "+0%"}</div>
+                            <div className="text-lg sm:text-2xl font-black text-emerald-500">${(event.ticket_price * (event.attendees_count || 0)).toLocaleString()}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest"><TrendingUp size={11} className="inline mr-1" />{event.growth || "Confirmed"}</div>
+                            <div className="text-lg sm:text-2xl font-black text-emerald-500">${event.ticket_price || 0}</div>
+                          </>
+                        )}
                       </div>
 
 
