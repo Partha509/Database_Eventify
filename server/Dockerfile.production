@@ -1,32 +1,27 @@
 FROM php:8.1-apache
 
-# Install required system packages and PHP extensions
 RUN apt-get update && apt-get install -y \
     libpng-dev libonig-dev libxml2-dev zip unzip git curl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Grab the latest Composer executable
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set the working directory inside the container
 WORKDIR /var/www/html
 
+# Copies your entire project into the container
 COPY . .
 
-# Point Apache to the Laravel public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Enable URL rewriting for Laravel routes
 RUN a2enmod rewrite
 
-# Install PHP dependencies while ignoring missing local platform requirements
 RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs
 
-# Create necessary Laravel folders to prevent permission crashes
+# Creates necessary folders so the chown command below doesn't crash
 RUN mkdir -p /var/www/html/storage/framework/cache/data \
     && mkdir -p /var/www/html/storage/framework/sessions \
     && mkdir -p /var/www/html/storage/framework/testing \
