@@ -57,7 +57,7 @@ const CheckoutPanel = ({ event, dm, onClose, onConfirmed }) => {
     try {
       const response = await axios.post(`${secrets.backendEndpoint}/api/bkash/create`, {
         amount: total,
-        ticket_id: event.id,
+        ticket_id: event.ticket_id || event.id,
         customer_name: details.name,
         customer_email: details.email,
         customer_phone: details.phone
@@ -68,11 +68,17 @@ const CheckoutPanel = ({ event, dm, onClose, onConfirmed }) => {
       if (response.data.bkashURL) {
         window.location.href = response.data.bkashURL;
       } else {
-        alert(`Error: ${response.data.message}`);
+        alert(`Error: ${response.data.message || JSON.stringify(response.data)}`);
         setLoading(false);
       }
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || 'Connection failed'}`);
+      console.error("BKASH CREATE ERROR:", error);
+      if (error.response) {
+        console.error("RESPONSE DATA:", error.response.data);
+        console.error("RESPONSE STATUS:", error.response.status);
+      }
+      const errMessage = error.response?.data?.message || error.response?.data?.error || 'Connection failed';
+      alert(`Error: ${errMessage}`);
       setLoading(false);
     }
   };

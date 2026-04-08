@@ -70,6 +70,9 @@ Route::get('/bookings', [BookingController::class, 'index']);
 Route::get('/bookings/{id}', [BookingController::class, 'show']);
 Route::middleware('auth:api')->post('/bookings', [BookingController::class, 'store']);
 Route::middleware('auth:api')->delete('/bookings/{id}', [BookingController::class, 'destroy']);
+Route::middleware('auth:api')->get('/user/my-tickets', [BookingController::class, 'myTickets']);
+Route::middleware('auth:api')->get('/user/hosting-stats', [BookingController::class, 'hostingStats']);
+Route::middleware('auth:api')->get('/user/attending-stats', [BookingController::class, 'attendingStats']);
 
 // --- Payments ---
 Route::get('/payments', [PaymentController::class, 'index']);

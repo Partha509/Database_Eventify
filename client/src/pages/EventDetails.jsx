@@ -209,6 +209,7 @@ export default function EventDetails() {
             location: data.venue?.location || "TBD",
             category: data.category?.category_name || "General",
             price: data.tickets && data.tickets.length > 0 ? data.tickets[0].price : 0,
+            ticket_id: data.tickets && data.tickets.length > 0 ? data.tickets[0].ticket_id : data.event_id,
             image: data.image_url 
               ? `${secrets.backendEndpoint}/storage/${data.image_url}` 
               : "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80&w=2070"
