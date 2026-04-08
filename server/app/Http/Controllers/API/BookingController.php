@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use App\Models\Event;
+use App\Models\Ticket;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -31,27 +33,21 @@ class BookingController extends Controller
     {
         $userId = auth()->id();
 
-        // All events hosted by this user
-        $events = Event::with(['tickets.bookings.payment'])->where('user_id', $userId)->get();
-
-        $totalEvents = $events->count();
-        $totalAttendees = 0;
-        $totalRevenue = 0;
-
-        foreach ($events as $event) {
-            foreach ($event->tickets as $ticket) {
-                $bookingCount = $ticket->bookings->count();
-                $totalAttendees += $bookingCount;
-                foreach ($ticket->bookings as $booking) {
-                    $totalRevenue += $booking->payment ? (float)$booking->payment->pay_amount : (float)$ticket->price;
-                }
-            }
-        }
+        $stats = Event::where('user_id', $userId)
+            ->join('tickets', 'events.event_id', '=', 'tickets.event_id')
+            ->leftJoin('bookings', 'tickets.ticket_id', '=', 'bookings.ticket_id')
+            ->leftJoin('payments', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->selectRaw('
+                COUNT(DISTINCT events.event_id) as total_events,
+                COUNT(bookings.booking_id) as total_attendees,
+                SUM(CASE WHEN bookings.booking_id IS NOT NULL THEN COALESCE(payments.pay_amount, tickets.price, 0) ELSE 0 END) as total_revenue
+            ')
+            ->first();
 
         return response()->json([
-            'total_events'    => $totalEvents,
-            'total_attendees' => $totalAttendees,
-            'total_revenue'   => $totalRevenue,
+            'total_events'    => (int) ($stats->total_events ?? 0),
+            'total_attendees' => (int) ($stats->total_attendees ?? 0),
+            'total_revenue'   => (float) ($stats->total_revenue ?? 0),
         ]);
     }
 
@@ -63,41 +59,60 @@ class BookingController extends Controller
     {
         $userId = auth()->id();
 
-        $bookings = Booking::with(['ticket.event.tickets.bookings', 'payment'])
-                ->where('user_id', $userId)
-                ->get();
+        $stats = Booking::where('bookings.user_id', $userId)
+            ->leftJoin('payments', 'bookings.booking_id', '=', 'payments.booking_id')
+            ->leftJoin('tickets', 'bookings.ticket_id', '=', 'tickets.ticket_id')
+            ->selectRaw('
+                COUNT(DISTINCT bookings.booking_id) as total_events_attending,
+                SUM(COALESCE(payments.pay_amount, tickets.price, 0)) as total_cost
+            ')
+            ->first();
 
-        $totalEventsAttending = $bookings->count();
-        $totalCost = $bookings->sum(fn($b) => $b->payment ? (float)$b->payment->pay_amount : (float)optional($b->ticket)->price);
-
-        // Sum all attendees across those events
-        $totalAttendees = 0;
-        $seenEvents = [];
-        foreach ($bookings as $b) {
-            $event = optional($b->ticket)->event;
-            if ($event && !in_array($event->event_id, $seenEvents)) {
-                $seenEvents[] = $event->event_id;
-                foreach ($event->tickets as $ticket) {
-                    $totalAttendees += $ticket->bookings->count();
-                }
-            }
-        }
+        // Count all attendees across the events the user is attending
+        $eventAttendees = DB::table('bookings as b2')
+            ->whereIn('b2.ticket_id', function($query) use ($userId) {
+                $query->select('ticket_id')
+                    ->from('bookings')
+                    ->where('user_id', $userId);
+            })
+            ->count();
 
         return response()->json([
-            'total_events'    => $totalEventsAttending,
-            'total_cost'      => $totalCost,
-            'total_attendees' => $totalAttendees,
+            'total_events'    => (int) ($stats->total_events_attending ?? 0),
+            'total_cost'      => (float) ($stats->total_cost ?? 0),
+            'total_attendees' => (int) $eventAttendees,
         ]);
     }
 
     public function store(Request $request)
     {
-        $booking = Booking::create($request->all());
+        try {
+            return DB::transaction(function() use ($request) {
+                $ticket = Ticket::lockForUpdate()->find($request->ticket_id);
+                
+                if (!$ticket) {
+                    return response()->json(['message' => 'Ticket not found'], 404);
+                }
 
-        return response()->json([
-            'message'=>'Booking Successful',
-            'booking'=>$booking
-        ],201);
+                if ($ticket->quantity <= 0) {
+                    return response()->json(['message' => 'Tickets sold out'], 400);
+                }
+
+                $booking = Booking::create($request->all());
+                
+                // Atomic decrement
+                $ticket->decrement('quantity');
+
+                return response()->json([
+                    'message' => 'Booking Successful',
+                    'booking' => $booking
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Booking failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show($id)

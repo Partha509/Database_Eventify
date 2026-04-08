@@ -380,9 +380,9 @@ export default function MyEvents() {
   // Dynamic stat cards per tab
   const activeStats = activeTab === "hosting"
     ? [
-        { id: "h1", label: "Total Events", value: String(hostingStats.total_events), icon: <TrendingUp size={24} /> },
-        { id: "h2", label: "Total Attendees", value: String(hostingStats.total_attendees), icon: <Users size={24} /> },
-        { id: "h3", label: "Total Revenue", value: `৳${Number(hostingStats.total_revenue).toLocaleString()}`, icon: <DollarSign size={24} /> },
+        { id: "h1", label: "Total Events", value: String(hostingStats.total_events || 0), icon: <TrendingUp size={24} /> },
+        { id: "h2", label: "Total Attendees", value: String(hostingStats.total_attendees || 0), icon: <Users size={24} /> },
+        { id: "h3", label: "Total Revenue", value: `৳${Number(hostingStats.total_revenue || 0).toLocaleString()}`, icon: <DollarSign size={24} /> },
       ]
     : [
         { id: "a1", label: "Total Events", value: String(attendingStats.total_events), icon: <TrendingUp size={24} /> },
@@ -532,7 +532,9 @@ export default function MyEvents() {
 
                       src={
                         event.image_url
-                          ? `http://localhost:8000/storage/${event.image_url}`
+                          ? (event.image_url.startsWith('http')
+                              ? event.image_url
+                              : `http://localhost:8000/storage/${event.image_url}`)
                           : event.cover_picture
                             ? event.cover_picture.startsWith('http')
                               ? event.cover_picture
@@ -567,8 +569,8 @@ export default function MyEvents() {
                       <div>
                         {activeTab === "hosting" ? (
                           <>
-                            <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest"><TrendingUp size={11} className="inline mr-1" />{event.growth || "+0%"}</div>
-                            <div className="text-lg sm:text-2xl font-black text-emerald-500">${(event.ticket_price * (event.attendees_count || 0)).toLocaleString()}</div>
+                            <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest"><Users size={11} className="inline mr-1" />People Bought</div>
+                            <div className="text-lg sm:text-2xl font-black text-emerald-500">{event.attendees_count || 0} Persons</div>
                           </>
                         ) : (
                           <>

@@ -59,15 +59,17 @@ export default function LoginPage() {
         const profile = await api.getProfile();
         if (profile) {
           login({
+            user_id: profile.user_id,
             user_name: profile.user_name || "",
             email: profile.email || "",
             phone: profile.phone || "",
           });
         } else {
           login({
-            user_name: response.user_name || "",
-            email: response.email || "",
-            phone: response.phone || "",
+            user_id: response.user?.user_id || response.user_id,
+            user_name: response.user_name || response.user?.user_name || "",
+            email: response.email || response.user?.email || "",
+            phone: response.phone || response.user?.phone || "",
           });
         }
 
