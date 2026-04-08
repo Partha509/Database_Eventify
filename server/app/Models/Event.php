@@ -4,21 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $primaryKey = 'event_id';
     
     public $timestamps = false;
 
-    protected $appends = ['price'];
+    protected $appends = ['price', 'attendees_count'];
 
     public function getPriceAttribute()
     {
         $ticket = $this->tickets->first();
         return $ticket ? (float) $ticket->price : 0;
+    }
+
+    public function getAttendeesCountAttribute()
+    {
+        // Sum bookings across all tickets for this event
+        return \App\Models\Booking::whereIn('ticket_id', $this->tickets->pluck('ticket_id'))->count();
     }
 
     protected $fillable = [
